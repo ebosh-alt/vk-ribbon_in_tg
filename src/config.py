@@ -105,7 +105,8 @@ Recomended_channels.count = len(rec_channels.get_keys())
 #     "chat_id": "integer",
 #     "last_id_mes": "integer",
 
-# } messages_from_rec_channels = Message_from_rec_channels(db_file_name=db_file_name,
+# }
+# messages_from_rec_channels = Message_from_rec_channels(db_file_name=db_file_name,
 # args=messages_from_rec_channels_args, table_name=messages_from_rec_channelstable_name)
 # Message_from_rec_channels.count = len(messages_from_rec_channels.get_keys())
 
@@ -123,3 +124,8 @@ phone_number = "+79952605482"
 # length_keyboard
 count_of_buts_in_keyboard = 7
 days_for_mes_rec = datetime.timedelta(days=3)
+
+ban_words = ["t.me", "регистрируйся", "регистрируюся", "подпишись", "переходи", "ссылка на подписку",
+             "жми на кнопочку", "перейди", "огромный ассортимент", "скидки в директе и лс", "ержи ссылку",
+             "скидка при первом заказе", "множество гарантий и довольных клиентов", "самые отзывчивые менеджеры",
+             "помогут подобрать лук", "обзоры вещей в reels", "можем найти почти любую вещь с интернета по фото"]

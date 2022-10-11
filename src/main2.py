@@ -1,3 +1,4 @@
+import asyncio
 import time
 import random
 
@@ -72,7 +73,6 @@ async def admin(message):
     admin.mailing_text = None
 
     users.update_info(user)
-
     admins.update_info(admin)
 
 
@@ -380,6 +380,7 @@ async def data_entry_by_admin(message):
     user_id = message.from_user.id
     admin = admins.get_elem(id=user_id)
     flag = admin.flag
+    print(flag)
 
     try:
         await bot.delete_message(chat_id=user_id, message_id=message.id)
@@ -489,7 +490,7 @@ async def data_entry_by_admin(message):
         if text_is_channel_url(message.forward_from_chat):
             link = f"https://t.me/{message.forward_from_chat.username}"
             message_from_rec_channels = load_object()
-            if link not in message_from_rec_channels:
+            if link not in message_from_rec_channels.links:
                 message_from_rec_channels.add_link(link=link)
 
                 save_object(file_name="message_from_rec_channel.pkl",
@@ -583,6 +584,7 @@ async def delete_channels(call: types.CallbackQuery):
 @dp.message_handler(content_types=types.ContentTypes.ANY)
 async def start_logic(message: types.Message):
     global users
+
     user_id = message.from_user.id
     user = users.get_elem(user_id)
     if user.flag == 1:
@@ -628,15 +630,13 @@ async def start_logic(message: types.Message):
                                                                                   channel_list=user.channels,
                                                                                   keyboard_length=count_of_buts_in_keyboard))
         elif message.text in ["Рекомендации", "Rec"]:
-            # await bot.send_message(chat_id=user_id,
-            #                        text="Рекомендации ещё в разработке")
             message_from_rec_channel = load_object(file_name="message_from_rec_channel.pkl")
             client = TelegramClient("assahit", api_id, api_hash)
             await client.start(phone=phone_number)
-            # check = random.randrange(0, 60, 15)
-            # for x in range(check):
+
             for i in message_from_rec_channel.data:
                 channel = message_from_rec_channel.get_elem(i)
+                print(channel.list_object)
                 if len(channel.list_object) != 0:
                     for obj in channel.list_object:
                         try:
@@ -645,18 +645,17 @@ async def start_logic(message: types.Message):
                             pass
 
                     onlyfiles = [f for f in listdir(f"./rec/")]
-
                     media = await get_media(message_text=channel.message_text, onlyfiles=onlyfiles, folder="rec")
-                    mes = await bot.send_media_group(chat_id=user_id,
+                    messages = await bot.send_media_group(chat_id=user_id,
                                                      media=media)
-                    #                                  reply_markup=None)###create
-                    # user.messages_to_del.append(mes.)
+                    for mes in messages:
+                        user.messages_to_del.append(mes.message_id)
+                    users.update_info(elem=user)
                     for file in onlyfiles:
                         os.remove(f"./rec/{file}")
                 else:
                     await bot.send_message(chat_id=user_id,
-                                           text=channel.message_text,
-                                           reply_markup=None)  ###create
+                                           text=channel.message_text)
             await client.disconnect()
 
     elif user.flag == 3:
@@ -668,18 +667,18 @@ async def start_logic(message: types.Message):
 
         elif text_is_channel_url(message.forward_from_chat):
             keys = channels.get_keys()
-            # print(message)
             for key in keys:
                 channel = channels.get_channel(key)
                 if channel.name == message.forward_from_chat.title:
-                    print("break")
-                    await bot.send_message(chat_id=user_id,
-                                           text=adding_new_channel_2_text[user.language],
-                                           reply_markup=adding_new_channel_keyboard[user.language])
-                    await bot.send_message(chat_id=user_id,
-                                           text=adding_new_channel_1_text[user.language],
-                                           reply_markup=adding_new_channel_keyboard[user.language])
                     break
+                    #
+                    # await bot.send_message(chat_id=user_id,
+                    #                        text=adding_new_channel_2_text[user.language],
+                    #                        reply_markup=adding_new_channel_keyboard[user.language])
+                    # await bot.send_message(chat_id=user_id,
+                    #                        text=adding_new_channel_1_text[user.language],
+                    #                        reply_markup=adding_new_channel_keyboard[user.language])
+
             else:
                 channel = Channel(key=channels.count)
                 link = f"https://t.me/{message.forward_from_chat.username}"
@@ -687,7 +686,10 @@ async def start_logic(message: types.Message):
                 channel.url = link
                 channel.chat_id = message.forward_from_chat.id
                 channels.add_channel(channel=channel)
-                print("add new channel")
+
+            if message.from_user.id not in channel.users:
+                channel.users.append(message.from_user.id)
+                channels.update_info(elem=channel)
 
                 await bot.send_message(chat_id=user_id,
                                        text=adding_new_channel_2_text[user.language],
@@ -695,15 +697,10 @@ async def start_logic(message: types.Message):
                 await bot.send_message(chat_id=user_id,
                                        text=adding_new_channel_1_text[user.language],
                                        reply_markup=adding_new_channel_keyboard[user.language])
-            if message.from_user.id not in channel.users:
-                channel.users.append(message.from_user.id)
-                print("in channel add user_id")
-                channels.update_info(elem=channel)
+                await asyncio.sleep(0)
 
             if channel.key not in user.channels:
-                print("user add channel key ")
                 user.channels.append(channel.key)
-
 
         else:
             await bot.send_message(chat_id=user_id,
@@ -803,15 +800,12 @@ class Get_new_message(BackGroundProcess):
     @staticmethod
     async def get_new_message():
         global channels, users
-        # users_list = users.get_keys()
         channels_list = channels.get_keys()
         client = TelegramClient("mkmkmkmosdlsmkmkkmkmkmdlmdlmoaaaosqwqhit", api_id, api_hash)
         await client.start(phone=phone_number)
         for key in channels_list:
-            # print(key)
             channel = channels.get_channel(key)
             new_message = await client.get_messages(channel.url, limit=1)
-            # print(channel.last_id_mes, new_message[0].id)
 
             if channel.last_id_mes is None:
                 channel.last_id_mes = new_message[0].id
@@ -828,11 +822,21 @@ class Get_new_message(BackGroundProcess):
                 for message in new_message:
                     if message.media is None:
                         for user_id in channel.users:
-                            await bot.send_message(chat_id=user_id,
-                                                   text=message.text)
+                            mes = await bot.send_message(chat_id=user_id,
+                                                         text=message.text)
+                            user = users.get_elem(user_id)
+                            user.messages_to_del.append(mes.message_id)
+                            users.update_info(elem=user)
+
                     if message.media is not None:
                         if len(message.text) > 0:
-                            message_text = message.text
+                            if check_advertising(message.text.lower()):
+                                message_text = message.text
+                            else:
+                                onlyfiles = [f for f in listdir(f"./фото/")]
+                                for file in onlyfiles:
+                                    os.remove(f"./фото/{file}")
+                                break
                         if grouped_id == 0:
                             grouped_id = message.grouped_id
                         if grouped_id == message.grouped_id:
@@ -840,12 +844,17 @@ class Get_new_message(BackGroundProcess):
 
                         if grouped_id != message.grouped_id or message.id + limit - 1 == channel.last_id_mes:
                             onlyfiles = [f for f in listdir(f"./фото/")]
-                            media = await get_media(message_text=message_text, onlyfiles=onlyfiles)
+                            print(channel.users)
                             for user_id in channel.users:
+                                media = await get_media(message_text=message_text, onlyfiles=onlyfiles)
+                                print(media, "\n", user_id)
                                 mes = await bot.send_media_group(chat_id=user_id,
                                                                  media=media)
                                 user = users.get_elem(user_id)
-                                user.messages_to_del.append(mes.message_id)
+                                for i in mes:
+                                    # await bot.delete_message(chat_id=user_id,
+                                    #                          message_id=i.message_id)
+                                    user.messages_to_del.append(i.message_id)
                                 users.update_info(elem=user)
 
                             for file in onlyfiles:
@@ -870,7 +879,6 @@ class Get_new_message(BackGroundProcess):
                 new_messages = await client.get_messages(link, limit=50, min_id=links[link])
 
             for message in new_messages:
-                # print(message)
                 save_messages = messages_from_rec_channels.get_data()
                 if message.grouped_id not in save_messages:
                     messages_from_rec_channels.add_elem(group_id=message.grouped_id,
@@ -882,7 +890,6 @@ class Get_new_message(BackGroundProcess):
 
                 if message.media is not None:
                     new_message.add_elem(elem=message.media)
-                    print(message.media)
 
                 if new_message.time is None:
                     new_message.time = message.date
@@ -895,7 +902,7 @@ class Get_new_message(BackGroundProcess):
 
     def start_schedule(self):
         while True:
-            # run(self.get_new_message())
+            run(self.get_new_message())
             run(self.get_rec_mes())
             time.sleep(10)
 
@@ -908,11 +915,14 @@ class Cleaner_mes_rec(BackGroundProcess):
     async def cleaner():
         messages_from_rec_channels = load_object(file_name="message_from_rec_channel.pkl")
         time_now = datetime.datetime.now(tz=datetime.timezone.utc)
-
+        list_to_del = []
         for group_id in messages_from_rec_channels.data:
             message = messages_from_rec_channels.get_elem(key=group_id)
             if time_now - days_for_mes_rec > message.time:
-                del messages_from_rec_channels.data[group_id]
+                list_to_del.append(group_id)
+
+        for group_id in list_to_del:
+            del messages_from_rec_channels.data[group_id]
         save_object(data=messages_from_rec_channels)
 
     def start_schedule(self):
@@ -923,8 +933,14 @@ class Cleaner_mes_rec(BackGroundProcess):
 
 
 if __name__ == "__main__":
-    # get_new_message = Get_new_message()
-    # get_new_message.start_process(func=get_new_message.start_schedule)
+    get_new_message = Get_new_message()
+    get_new_message.start_process(func=get_new_message.start_schedule)
+    cleaner_mes_rec = Cleaner_mes_rec()
+    cleaner_mes_rec.start_process(func=cleaner_mes_rec.start_schedule)
+    cleaner = Cleaner()
+    cleaner.start_process(func=cleaner.start_schedule)
+
+    print("MAIN BOT")
     executor.start_polling(dp, skip_updates=False)
 # client = TelegramClient("assahit", api_id, api_hash)
 # client.start(phone=phone_number)

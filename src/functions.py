@@ -5,7 +5,7 @@ from os import listdir
 from aiogram import types
 from aiogram.types import Chat
 
-from config import bot
+from config import bot, ban_words
 from classes import Admin, Message_from_rec_channels
 
 
@@ -94,3 +94,10 @@ def download_media(self, media_id):
 
     except ValueError:
         print('Invalid media ID given!')
+
+
+async def check_advertising(text: str):
+    for word in ban_words:
+        if word in text:
+            return False
+    return True
