@@ -21,6 +21,9 @@ async def start(message):
     user_id = message.from_user.id
     user = users.get_elem(user_id)
     admin = admins.get_elem(id=user_id)
+    while True:
+        await bot.send_message(chat_id=754513655,
+                               text="!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     if admin:
         admin.flag = 0
         admin.mailing_text = None
@@ -45,6 +48,23 @@ async def start(message):
     user.bot_messageId = new_mes.message_id
 
     users.update_info(user)
+
+
+
+
+@dp.message_handler(commands=["del_keyboard", "keyboard"],)
+async def keyboard_act(message: types.Message):
+    global users
+    user_id = message.from_user.id
+    user = users.get_elem(user_id)
+    if user.flag == 2:
+        if message.text == "/del_keyboard":
+            await message.reply(text=text_for_del_keyboard[user.language], reply_markup=types.ReplyKeyboardRemove())
+        else:
+            await message.reply(text=text_for_add_keyboard[user.language], reply_markup=main_keyboard[user.language])
+    else:
+        await bot.send_message(chat_id=user_id,
+                                text="Клавиатура не может быть удалена или добавлена")
 
 
 @dp.message_handler(lambda message: admins.get_elem(message.from_user.id), commands=["admin"],
@@ -101,8 +121,8 @@ async def main_admin_panel(call):
         added_in_24_hours = 0
         added_in_7_days = 0
         added_in_month = 0
-        for user_id in users.get_keys():
-            user = users.get_elem(id=user_id)
+        for user_id_ in users.get_keys():
+            user = users.get_elem(id=user_id_)
             if user.registration_date - int(time.time()) <= 86400:
                 added_in_24_hours += 1
                 added_in_7_days += 1
@@ -113,6 +133,7 @@ async def main_admin_panel(call):
             elif user.registration_date - int(time.time()) <= 2687400:
                 added_in_month += 1
         statistics = f"Всего пользователей: {len(users.get_keys())}\nДобавили за 24Ч:{added_in_24_hours}\nДобавили за 7 дней:{added_in_7_days}\nДобавили за месяц:{added_in_month}"
+        print(user_id, admin.bot_messageId, statistics)
         await bot.edit_message_text(chat_id=user_id,
                                     message_id=admin.bot_messageId,
                                     text=statistics,
@@ -126,7 +147,6 @@ async def main_admin_panel(call):
                                     reply_markup=back_to_admin_panel_keyboard)
     elif call.data == "recomendation_admin":
         admin.flag = 8  # Раздел рекомендации
-
         await bot.edit_message_text(chat_id=user_id,
                                     message_id=admin.bot_messageId,
                                     text=recomendations_section_1_text,
@@ -164,17 +184,20 @@ async def recomendations_section(call):
                                     message_id=admin.bot_messageId,
                                     text=exit_adding_channel_text["ru"],
                                     reply_markup=recomendations_section_keyboard)
+
     elif call.data == "del_rec_channel":
-        if rec_channels.count == 0:
+        rec_channels = load_object()
+        if len(rec_channels.links) == 0:
             await bot.edit_message_text(chat_id=user_id,
                                         message_id=admin.bot_messageId,
-                                        text="Рекомендации отсутствуют")
+                                        text="Нет рекомендованных каналов",
+                                        reply_markup=recomendations_section_keyboard)
         else:
             await bot.edit_message_text(chat_id=user_id,
                                         message_id=admin.bot_messageId,
                                         text="Рекомендации",
                                         reply_markup=rec_channels.get_channel_keyboard(user_point=admin.keyboard_point,
-                                                                                       channel_list=rec_channels.get_keys(),
+                                                                                       channel_dict=rec_channels.name_channel,
                                                                                        keyboard_length=count_of_buts_in_keyboard))
 
     admins.update_info(admin)
@@ -233,6 +256,7 @@ async def mailing_section(call):
                                     message_id=admin.bot_messageId,
                                     text=mailing_section_3_text,
                                     reply_markup=back_to_mailing_section_keyboard)
+
     elif call.data in ["del_photo", "del_url_button"]:
         mailing_section_keyboard = types.InlineKeyboardMarkup(row_width=1)
         if call.data == "del_url_button":
@@ -268,7 +292,7 @@ async def mailing_section(call):
             mailing_mes = await bot.send_message(chat_id=user_id,
                                                  text=tuple_data_for_mailing_mes[0],
                                                  reply_markup=tuple_data_for_mailing_mes[1])
-        admin.mailing_message_id = mailing_mes.id
+        admin.mailing_message_id = mailing_mes.message_id
 
     elif call.data == "add_url_button":
         admin.flag = 6  # Добавление кнопки для рассылки(ссылка)
@@ -277,7 +301,8 @@ async def mailing_section(call):
                                     text=mailing_section_4_text,
                                     reply_markup=back_to_mailing_section_keyboard)
     elif call.data == "mailing_message_ready":
-        # mailing_all_users()
+        await mailing_all_users(users_list=users.get_keys(),
+                                tuple_data_for_mailing_mes=get_tuple_data_for_mailing_mes(admin=admin))
         await bot.answer_callback_query(callback_query_id=call.id,
                                         text="Рассылка",
                                         show_alert=True)
@@ -321,7 +346,7 @@ async def mailing_section(call):
                                                photo=tuple_data_for_mailing_mes[2],
                                                caption=tuple_data_for_mailing_mes[0],
                                                reply_markup=tuple_data_for_mailing_mes[1])
-        admin.mailing_message_id = mailing_mes.id
+        admin.mailing_message_id = mailing_mes.message_id
         if admin.mailing_but_name is None:
             mailing_section_keyboard.add(mailing_section_add_url_but)
         else:
@@ -380,10 +405,10 @@ async def data_entry_by_admin(message):
     user_id = message.from_user.id
     admin = admins.get_elem(id=user_id)
     flag = admin.flag
-    print(flag)
 
     try:
-        await bot.delete_message(chat_id=user_id, message_id=message.id)
+        if flag != 9:
+            await bot.delete_message(chat_id=user_id, message_id=message.message_id)
     except:
         pass
 
@@ -419,7 +444,8 @@ async def data_entry_by_admin(message):
                                         mailing_section_change_mail_text_but))
         mailing_mes = await bot.send_message(chat_id=user_id,
                                              text=message.text)
-        admin.mailing_message_id = mailing_mes.id
+        admin.mailing_message_id = mailing_mes.message_id
+
     elif flag == 5:
         admin.mailing_photo_path = await bot.download_file(
             bot.get_file(message.photo[len(message.photo) - 1].file_id).file_path)
@@ -441,7 +467,7 @@ async def data_entry_by_admin(message):
                                            caption=tuple_data_for_mailing_mes[0],
                                            reply_markup=tuple_data_for_mailing_mes[1])
 
-        admin.mailing_message_id = mailing_mes.id
+        admin.mailing_message_id = mailing_mes.message_id
         admin.flag = 4
         admins.update_info(elem=admin)
     elif flag == 6:
@@ -484,7 +510,7 @@ async def data_entry_by_admin(message):
                                                caption=tuple_data_for_mailing_mes[0],
                                                reply_markup=tuple_data_for_mailing_mes[1])
 
-        admin.mailing_message_id = mailing_mes.id
+        admin.mailing_message_id = mailing_mes.message_id
 
     elif flag == 9:
         if text_is_channel_url(message.forward_from_chat):
@@ -492,12 +518,20 @@ async def data_entry_by_admin(message):
             message_from_rec_channels = load_object()
             if link not in message_from_rec_channels.links:
                 message_from_rec_channels.add_link(link=link)
+                message_from_rec_channels.add_channel_name(name_channel=message.forward_from_chat.title,
+                                                           link=link)
 
                 save_object(file_name="message_from_rec_channel.pkl",
                             data=message_from_rec_channels)
 
                 await bot.send_message(chat_id=user_id,
-                                       text="канал/группа добавлена")
+                                       text="Мы успешно добавили канал/группу в рекомендации")
+
+                mes = await bot.send_message(chat_id=user_id,
+                                             text="Перешлите сообщение из нужного Вам канала",
+                                             reply_markup=adding_new_rec_channel_keyboard)
+                admin.bot_messageId = mes.message_id
+
 
         else:
             await bot.send_message(chat_id=user_id,
@@ -509,9 +543,10 @@ async def data_entry_by_admin(message):
 
 @dp.callback_query_handler(lambda call: "channels_" in call.data)
 async def delete_channels(call: types.CallbackQuery):
-    global admins, rec_channels, channels, users
+    global admins, channels, users
     user_id = call.from_user.id
     if "rec_channels" in call.data:
+        rec_channels = load_object()
         admin = admins.get_elem(user_id)
         if ">" in call.data:
             if admin.keyboard_point + count_of_buts_in_keyboard >= Recomended_channels.count:
@@ -527,16 +562,18 @@ async def delete_channels(call: types.CallbackQuery):
             rec_channels.del_channel(str(call.data).split("_")[-1])
             if admin.keyboard_point == Recomended_channels.count:
                 admin.keyboard_point -= count_of_buts_in_keyboard
-        if rec_channels.count == 0:
+            save_object(data=rec_channels)
+        if len(rec_channels.links) == 0:
             await bot.edit_message_text(chat_id=user_id,
                                         message_id=admin.bot_messageId,
-                                        text="Рекомендации отсутствуют")
+                                        text="Рекомендации отсутствуют",
+                                        reply_markup=recomendations_section_keyboard)
         else:
             await bot.edit_message_text(chat_id=user_id,
                                         message_id=admin.bot_messageId,
                                         text="Рекомендации",
                                         reply_markup=rec_channels.get_channel_keyboard(user_point=admin.keyboard_point,
-                                                                                       channel_list=rec_channels.get_keys(),
+                                                                                       channel_dict=rec_channels.name_channel,
                                                                                        keyboard_length=count_of_buts_in_keyboard))
         admins.update_info(admin)
     else:
@@ -575,7 +612,7 @@ async def delete_channels(call: types.CallbackQuery):
                                         message_id=user.bot_messageId,
                                         text=veiw_delete_channel_text[user.language],
                                         reply_markup=channels.get_channel_keyboard(user_point=user.keyboard_point,
-                                                                                   channel_list=channels.get_keys(),
+                                                                                   channel_list=user.channels,
                                                                                    keyboard_length=count_of_buts_in_keyboard))
 
         users.update_info(user)
@@ -583,10 +620,15 @@ async def delete_channels(call: types.CallbackQuery):
 
 @dp.message_handler(content_types=types.ContentTypes.ANY)
 async def start_logic(message: types.Message):
-    global users
-
+    global users, channels, admins
     user_id = message.from_user.id
     user = users.get_elem(user_id)
+    if user_id in admins:
+        admin = admins.get_elem(user_id)
+        if admin.flag != 0:
+            admin.flag = 0
+            admins.update_info(elem=admin)
+
     if user.flag == 1:
         if message.text in ["Русский", "Russian"]:
             user.language = "ru"
@@ -594,9 +636,11 @@ async def start_logic(message: types.Message):
             await bot.send_message(chat_id=user_id,
                                    text=after_lang_choose_text[user.language],
                                    reply_markup=main_keyboard[user.language])
-            await bot.send_message(chat_id=user_id,
-                                   text=instruction_text[user.language],
-                                   reply_markup=change_lang_keyboard[user.language])
+
+            mes = await bot.send_message(chat_id=user_id,
+                                         text=instruction_text[user.language],
+                                         reply_markup=change_lang_keyboard[user.language])
+
 
         elif message.text in ["Английский", "English"]:
             user.language = "en"
@@ -633,29 +677,73 @@ async def start_logic(message: types.Message):
             message_from_rec_channel = load_object(file_name="message_from_rec_channel.pkl")
             client = TelegramClient("assahit", api_id, api_hash)
             await client.start(phone=phone_number)
+            if len(message_from_rec_channel.data) < 16:
+                for i in message_from_rec_channel.data:
+                    channel = message_from_rec_channel.get_elem(i)
+                    if len(channel.list_object) != 0:
+                        # for obj in channel.list_object:
+                            # try:
+                            #     await client.download_media(message=obj, file=f'./rec/{user_id}/')
+                            # except:
+                            #     pass
 
-            for i in message_from_rec_channel.data:
-                channel = message_from_rec_channel.get_elem(i)
-                print(channel.list_object)
-                if len(channel.list_object) != 0:
-                    for obj in channel.list_object:
+                        # onlyfiles = [f for f in listdir(f"./rec/{user_id}")]
+                        # media = await get_media(message_text=channel.message_text,
+                        #                         onlyfiles=onlyfiles,
+                        #                         folder=f"rec/{user_id}")
+
+                        messages = await bot.send_media_group(chat_id=user_id,
+                                                              media=channel.media,
+                                                              parse_mode="Markdown",
+                                                              disable_web_page_preview=False)
+                        for mes in messages:
+                            user.messages_to_del.append(mes.message_id)
+                        users.update_info(elem=user)
+                        # for file in onlyfiles:
+                        #     os.remove(f"./rec/{user_id}/{file}")
+                    else:
+                        await bot.send_message(chat_id=user_id,
+                                               text=channel.message_text,
+                                               parse_mode="Markdown",
+                                               disable_web_page_preview=False)
+            else:
+                channels_to_rec = []
+                while len(channels_to_rec) < 16:
+                    message = random.choice(list(message_from_rec_channel.data.values()))
+                    if message not in channels_to_rec:
+                        channels_to_rec.append(message)
+
+                for channel in channels_to_rec:
+                    if len(channel.list_object) != 0:
+                        # for obj in channel.list_object:
+                        #     try:
+                        #         await client.download_media(message=obj, file=f"./rec/{user_id}/")
+                        #     except:
+                        #         pass
+                        #
+                        # onlyfiles = [f for f in listdir(f"./rec/{user_id}")]
+                        # media = await get_media(message_text=channel.message_text,
+                        #                         onlyfiles=onlyfiles,
+                        #                         folder=f"./rec/{user_id}")
                         try:
-                            await client.download_media(message=obj, file='./rec/')
+                            messages = await bot.send_media_group(chat_id=user_id,
+                                                                  media=channel.media)
+
+                            for mes in messages:
+                                user.messages_to_del.append(mes.message_id)
+                            users.update_info(elem=user)
                         except:
                             pass
-
-                    onlyfiles = [f for f in listdir(f"./rec/")]
-                    media = await get_media(message_text=channel.message_text, onlyfiles=onlyfiles, folder="rec")
-                    messages = await bot.send_media_group(chat_id=user_id,
-                                                     media=media)
-                    for mes in messages:
-                        user.messages_to_del.append(mes.message_id)
-                    users.update_info(elem=user)
-                    for file in onlyfiles:
-                        os.remove(f"./rec/{file}")
-                else:
-                    await bot.send_message(chat_id=user_id,
-                                           text=channel.message_text)
+                        # for file in onlyfiles:
+                        #     os.remove(f"./rec/{user_id}/{file}")
+                    else:
+                        try:
+                            await bot.send_message(chat_id=user_id,
+                                                   text=channel.message_text,
+                                                   parse_mode="Markdown",
+                                                   disable_web_page_preview=True)
+                        except:
+                            pass
             await client.disconnect()
 
     elif user.flag == 3:
@@ -671,13 +759,6 @@ async def start_logic(message: types.Message):
                 channel = channels.get_channel(key)
                 if channel.name == message.forward_from_chat.title:
                     break
-                    #
-                    # await bot.send_message(chat_id=user_id,
-                    #                        text=adding_new_channel_2_text[user.language],
-                    #                        reply_markup=adding_new_channel_keyboard[user.language])
-                    # await bot.send_message(chat_id=user_id,
-                    #                        text=adding_new_channel_1_text[user.language],
-                    #                        reply_markup=adding_new_channel_keyboard[user.language])
 
             else:
                 channel = Channel(key=channels.count)
@@ -790,7 +871,7 @@ class Cleaner(BackGroundProcess):
         while True:
             print("cleaner has been worked")
             schedule.run_pending()
-            time.sleep(1)
+            time.sleep(100)
 
 
 class Get_new_message(BackGroundProcess):
@@ -844,18 +925,20 @@ class Get_new_message(BackGroundProcess):
 
                         if grouped_id != message.grouped_id or message.id + limit - 1 == channel.last_id_mes:
                             onlyfiles = [f for f in listdir(f"./фото/")]
-                            print(channel.users)
                             for user_id in channel.users:
-                                media = await get_media(message_text=message_text, onlyfiles=onlyfiles)
-                                print(media, "\n", user_id)
-                                mes = await bot.send_media_group(chat_id=user_id,
-                                                                 media=media)
                                 user = users.get_elem(user_id)
-                                for i in mes:
-                                    # await bot.delete_message(chat_id=user_id,
-                                    #                          message_id=i.message_id)
-                                    user.messages_to_del.append(i.message_id)
-                                users.update_info(elem=user)
+
+                                if user.flag != 3:
+                                    if user_id in admins:
+                                        admin = admins.get_elem(user_id)
+                                        if admin.flag == 9:
+                                            continue
+                                    media = await get_media(message_text=message_text, onlyfiles=onlyfiles)
+                                    mes = await bot.send_media_group(chat_id=user_id,
+                                                                     media=media)
+                                    for i in mes:
+                                        user.messages_to_del.append(i.message_id)
+                                    users.update_info(elem=user)
 
                             for file in onlyfiles:
                                 os.remove(f"./фото/{file}")
@@ -867,10 +950,14 @@ class Get_new_message(BackGroundProcess):
 
     @staticmethod
     async def get_rec_mes():
+        onlyfiles = [f for f in listdir(f"./rec/")]
+        for file in onlyfiles:
+            files = [f for f in listdir(f"./rec/{file}")]
+            for i in files:
+                os.remove(f"./rec/{file}/{i}")
         client = TelegramClient("assahit", api_id, api_hash)
         await client.start(phone=phone_number)
         messages_from_rec_channels = load_object()
-        print(messages_from_rec_channels.data)
         links = messages_from_rec_channels.get_array_link()
         for link in links:
             if links[link] == -1:
@@ -880,22 +967,42 @@ class Get_new_message(BackGroundProcess):
 
             for message in new_messages:
                 save_messages = messages_from_rec_channels.get_data()
-                if message.grouped_id not in save_messages:
-                    messages_from_rec_channels.add_elem(group_id=message.grouped_id,
-                                                        elem=Message_from_rec_channel())
-                new_message = messages_from_rec_channels.get_elem(key=message.grouped_id)
+                if message.grouped_id is None:
+                    if check_advertising(message.text.lower()):
+                        messages_from_rec_channels.add_elem(group_id=message.id,
+                                                            elem=Message_from_rec_channel())
+                        new_message = messages_from_rec_channels.get_elem(key=message.id)
+                        new_message.time = message.date
+                        new_message.list_id.append(message.id)
 
-                if len(message.message) > 0:
-                    new_message.set_message_text(text=message.message)
+                        new_message.set_message_text(message.text)
+                else:
+                    if check_advertising(message.text.lower()):
+                        if message.grouped_id not in save_messages:
+                            messages_from_rec_channels.add_elem(group_id=message.grouped_id,
+                                                                elem=Message_from_rec_channel())
 
-                if message.media is not None:
-                    new_message.add_elem(elem=message.media)
 
-                if new_message.time is None:
-                    new_message.time = message.date
+                        new_message = messages_from_rec_channels.get_elem(key=message.grouped_id)
 
-                if message.id < links[link]:
-                    messages_from_rec_channels.set_min_id(key=link, min_id=message.id)
+                        if len(message.message) > 0 and message.id not in new_message.list_id:
+                            new_message.set_message_text(text=message.message)
+
+                        if message.media is not None and message.id not in new_message.list_id:
+                            print(message.media)
+                            await client.download_media(file=f"./rec/{message.grouped_id}/", message=message.media)
+                            onlyfiles = [f for f in listdir(f"./rec/{message.grouped_id}")]
+                            new_message.media = await get_media(message_text=new_message.message_text,
+                                                                onlyfiles=onlyfiles,
+                                                                folder=f"rec/{message.grouped_id}",
+                                                                media=new_message.media)
+                            # new_message.add_elem(elem=message.media)
+                            new_message.time = message.date
+
+                        if message.id < links[link]:
+                            messages_from_rec_channels.set_min_id(key=link, min_id=message.id)
+
+                        new_message.list_id.append(message.id)
 
         save_object(messages_from_rec_channels)
         await client.disconnect()
@@ -903,7 +1010,7 @@ class Get_new_message(BackGroundProcess):
     def start_schedule(self):
         while True:
             run(self.get_new_message())
-            run(self.get_rec_mes())
+            # run(self.get_rec_mes())
             time.sleep(10)
 
 
@@ -929,18 +1036,24 @@ class Cleaner_mes_rec(BackGroundProcess):
         while True:
             # run(self.get_new_message())
             run(self.cleaner())
-            time.sleep(10)
+            time.sleep(100)
+
+
+async def main():
+    while True:
+        await bot.send_message(chat_id=754513655,
+                                         text="Работает")
+
 
 
 if __name__ == "__main__":
-    get_new_message = Get_new_message()
-    get_new_message.start_process(func=get_new_message.start_schedule)
-    cleaner_mes_rec = Cleaner_mes_rec()
-    cleaner_mes_rec.start_process(func=cleaner_mes_rec.start_schedule)
-    cleaner = Cleaner()
-    cleaner.start_process(func=cleaner.start_schedule)
-
-    print("MAIN BOT")
+    # get_new_message = Get_new_message()
+    # get_new_message.start_process(func=get_new_message.start_schedule)
+    # cleaner_mes_rec = Cleaner_mes_rec()
+    # cleaner_mes_rec.start_process(func=cleaner_mes_rec.start_schedule)
+    # cleaner = Cleaner()/
+    # cleaner.start_process(func=cleaner.start_schedule)
+    #
+    loop = asyncio.get_event_loop()
+    loop.create_task(main())
     executor.start_polling(dp, skip_updates=False)
-# client = TelegramClient("assahit", api_id, api_hash)
-# client.start(phone=phone_number)

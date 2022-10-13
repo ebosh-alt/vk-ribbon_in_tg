@@ -4,10 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2e2d8785-816b-4eb1-92a7-8c04737c99fe" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="2e2d8785-816b-4eb1-92a7-8c04737c99fe" name="Changes" comment="new">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/assahit.session" beforeDir="false" afterPath="$PROJECT_DIR$/src/assahit.session" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/classes.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/classes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/db.db" beforeDir="false" afterPath="$PROJECT_DIR$/src/db.db" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/db.db-shm" beforeDir="false" afterPath="$PROJECT_DIR$/src/db.db-shm" afterDir="false" />
@@ -16,6 +16,7 @@
       <change beforePath="$PROJECT_DIR$/src/main2.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main2.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/message_from_rec_channel.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/src/message_from_rec_channel.pkl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/mkmkmkmosdlsmkmkkmkmkmdlmdlmoaaaosqwqhit.session" beforeDir="false" afterPath="$PROJECT_DIR$/src/mkmkmkmosdlsmkmkkmkmkmdlmdlmoaaaosqwqhit.session" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/texts.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/texts.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,7 +65,7 @@
       <recent name="D:\bots Telegram\vk-ribbon_in_tg" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.config">
+  <component name="RunManager" selected="Python.main2 (1)">
     <configuration name="classes" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="vk-ribbon_in_tg" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -107,7 +108,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="main (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="functions" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="vk-ribbon_in_tg" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -119,7 +120,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/main.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/functions.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -192,20 +193,20 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.main" />
       <item itemvalue="Python.classes" />
       <item itemvalue="Python.config" />
-      <item itemvalue="Python.main (1)" />
+      <item itemvalue="Python.functions" />
       <item itemvalue="Python.main2 (1)" />
+      <item itemvalue="Python.main" />
       <item itemvalue="Python.testing" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.config" />
         <item itemvalue="Python.main2 (1)" />
+        <item itemvalue="Python.functions" />
+        <item itemvalue="Python.config" />
         <item itemvalue="Python.testing" />
         <item itemvalue="Python.classes" />
-        <item itemvalue="Python.main (1)" />
       </list>
     </recent_temporary>
   </component>
@@ -218,6 +219,14 @@
       <option name="presentableId" value="Default" />
       <updated>1663347397510</updated>
     </task>
+    <task id="LOCAL-00001" summary="new">
+      <created>1665490484116</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1665490484116</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -230,5 +239,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="new" />
+    <option name="LAST_COMMIT_MESSAGE" value="new" />
   </component>
 </project>

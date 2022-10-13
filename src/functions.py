@@ -55,8 +55,11 @@ def valid_url(url: str) -> bool:
         return False
 
 
-async def get_media(message_text: str | None, onlyfiles: list, folder: str = "фото") -> types.MediaGroup():
-    media = types.MediaGroup()
+async def get_media(message_text: str | None, onlyfiles: list, folder: str = "фото",
+                    media: None | types.MediaGroup = None) -> types.MediaGroup():
+    if media is None:
+        media = types.MediaGroup()
+
 
     s = [".mp4", ".mpeg", ".mpg", ".webm"]
 
@@ -72,11 +75,13 @@ async def get_media(message_text: str | None, onlyfiles: list, folder: str = "ф
             for i in s:
                 if i in onlyfiles[file]:
                     media.attach_video(video=types.InputFile(f"./{folder}/{onlyfiles[file]}"),
-                                       caption=message_text)
+                                       caption=message_text,
+                                       parse_mode="Markdown")
                     break
             else:
                 media.attach_photo(photo=types.InputFile(f"./{folder}/{onlyfiles[file]}"),
-                                   caption=message_text)
+                                   caption=message_text,
+                                   parse_mode="Markdown")
 
     return media
 
@@ -96,7 +101,7 @@ def download_media(self, media_id):
         print('Invalid media ID given!')
 
 
-async def check_advertising(text: str):
+def check_advertising(text: str):
     for word in ban_words:
         if word in text:
             return False

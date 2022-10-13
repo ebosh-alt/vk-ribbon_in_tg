@@ -1,6 +1,7 @@
 import datetime
 import logging
 import pickle
+import random
 
 from aiogram import Bot, Dispatcher
 from flask import Flask
@@ -18,7 +19,7 @@ def load_object(file_name="message_from_rec_channel.pkl") -> Message_from_rec_ch
     return data
 
 
-API_TOKEN = "5333826486:AAGVw0BEb2sCfi6KuYSn3juzBOnTbRjpDLI"
+API_TOKEN = "5333826486:AAEJwFwS80WMoGLKBiQ0wecfBQ0jysxK81A"
 
 # bot = telebot.TeleBot(token=API_TOKEN)
 bot = Bot(token=API_TOKEN)
@@ -82,18 +83,18 @@ channels = Channels(db_file_name=db_file_name, args=channels_args, table_name=ch
 Channels.count = len(channels.get_keys())
 
 # rec_channels
-rec_channels_table_name = "rec_channels"
-rec_channels_args = {
-    'key': 'integer',
-    'url': 'text',
-    'name': 'text',
-    'messages_to_send': 'blob',
-    "chat_id": "integer"
-
-}
-rec_channels = Recomended_channels(db_file_name=db_file_name, args=rec_channels_args,
-                                   table_name=rec_channels_table_name)
-Recomended_channels.count = len(rec_channels.get_keys())
+# rec_channels_table_name = "rec_channels"
+# rec_channels_args = {
+#     'key': 'integer',
+#     'url': 'text',
+#     'name': 'text',
+#     'messages_to_send': 'blob',
+#     "chat_id": "integer"
+#
+# }
+# rec_channels = Recomended_channels(db_file_name=db_file_name, args=rec_channels_args,
+#                                    table_name=rec_channels_table_name)
+# Recomended_channels.count = len(rec_channels.get_keys())
 
 # messages_from_rec_channels
 # messages_from_rec_channelstable_name = "messages_from_rec_channels"
@@ -111,9 +112,9 @@ Recomended_channels.count = len(rec_channels.get_keys())
 # Message_from_rec_channels.count = len(messages_from_rec_channels.get_keys())
 
 
-# messages_from_rec_channels = Message_from_rec_channels()#load_object(file_name="message_from_rec_channel.pkl")
+messages_from_rec_channels = Message_from_rec_channels()#load_object(file_name="message_from_rec_channel.pkl")
 # messages_from_rec_channels.add_link("https://t.me/vk_lenta")
-# save_object(messages_from_rec_channels)
+save_object(messages_from_rec_channels)
 
 api_id = 18142706
 api_hash = 'e9b070e6aee05f5437936312e49b6e45'
@@ -125,7 +126,19 @@ phone_number = "+79952605482"
 count_of_buts_in_keyboard = 7
 days_for_mes_rec = datetime.timedelta(days=3)
 
-ban_words = ["t.me", "регистрируйся", "регистрируюся", "подпишись", "переходи", "ссылка на подписку",
-             "жми на кнопочку", "перейди", "огромный ассортимент", "скидки в директе и лс", "ержи ссылку",
+ban_words = ["регистрируйся", "регистрируюся", "подпишись", "переходи", "ссылка на подписку",
+             "жми на кнопочку", "перейди", "огромный ассортимент", "скидки в директе и лс", "держи ссылку",
              "скидка при первом заказе", "множество гарантий и довольных клиентов", "самые отзывчивые менеджеры",
              "помогут подобрать лук", "обзоры вещей в reels", "можем найти почти любую вещь с интернета по фото"]
+
+
+if __name__ == '__main__':
+    messages_from_rec_channels = load_object(file_name="message_from_rec_channel.pkl")
+    print(messages_from_rec_channels.links)
+    print(len(messages_from_rec_channels.data))
+    # a = random.choice(list(messages_from_rec_channels.data.keys()))
+    # print(1, a)
+    for i in messages_from_rec_channels.data:
+        print(i, len(messages_from_rec_channels.data[i].list_object))
+        for x in messages_from_rec_channels.data[i].list_object:
+            print(type(x))

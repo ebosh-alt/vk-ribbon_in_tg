@@ -2,7 +2,9 @@ import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 import json
+
 from aiogram import types
+from telethon import types as teletypes
 
 
 ###Класс юзера
@@ -344,7 +346,6 @@ class Channels(Sqlite3_Database):
         else:
             self.update_info(elem=channel)
 
-
     def get_channel_keyboard(self, user_point: int, channel_list: list,
                              keyboard_length: int) -> types.InlineKeyboardMarkup:
         keyboard = types.InlineKeyboardMarkup(row_width=2)
@@ -420,9 +421,11 @@ class Admins(Sqlite3_Database):
 
 class Message_from_rec_channel:
     def __init__(self):
-        self.list_object: list = []
+        self.list_object: list[teletypes.MessageMediaPhoto | teletypes.MessageMediaWebPage] = []
         self.message_text = None
         self.time = None
+        self.list_id: list = []
+        self.media: types.MediaGroup = types.MediaGroup()
 
     def add_elem(self, elem):
         self.list_object.append(elem)
@@ -453,6 +456,7 @@ class Message_from_rec_channels(nsql_database):
     def __init__(self) -> None:
         super().__init__()
         self.links: dict = {}
+        self.name_channel: dict = {}  # channel_name | link_to_channel
 
     def __contains__(self, item: str) -> bool:
         if item in self.links:
@@ -466,6 +470,9 @@ class Message_from_rec_channels(nsql_database):
     def add_link(self, link: str) -> None:
         self.links[link] = -1
 
+    def add_channel_name(self, name_channel: str, link: str) -> None:
+        self.name_channel[name_channel] = link
+
     def get_array_link(self) -> dict:
         return self.links
 
@@ -474,6 +481,37 @@ class Message_from_rec_channels(nsql_database):
 
     def set_min_id(self, key: str, min_id: int) -> None:
         self.links[key] = min_id
+
+    def del_channel(self, channel_name: str) -> None:
+        link = self.name_channel[channel_name]
+        del self.name_channel[channel_name]
+        del self.links[link]
+
+    def get_channel_keyboard(self, user_point: int, channel_dict: dict,
+                             keyboard_length: int) -> types.InlineKeyboardMarkup:
+        keyboard = types.InlineKeyboardMarkup(row_width=2)
+
+        callback = "rec_channels"
+        count = 0
+        keys = list(channel_dict.keys())
+        for i in range(user_point, len(channel_dict)):
+            if count < keyboard_length:
+                print(channel_dict, " : ", i)
+                channel_name = keys[i]
+                # link = channel_dict[channel_name]
+
+                # print(f"{callback}_{link}")
+                keyboard.add(types.InlineKeyboardButton(text=channel_name, callback_data=f"{callback}_{channel_name}"))
+            else:
+                break
+            count += 1
+        keyboard.add(
+            types.InlineKeyboardButton(text="<", callback_data=f"{callback}_<"),
+            types.InlineKeyboardButton(text=">", callback_data=f"{callback}_>")
+        )
+        if self.__class__.__name__ == "Message_from_rec_channels":
+            keyboard.add(types.InlineKeyboardButton(text="Назад", callback_data="back_to_admin_panel"))
+        return keyboard
 
     # def get_elem(self, id: int) -> Admin | bool:
     #     if id in self:
