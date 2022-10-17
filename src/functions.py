@@ -77,13 +77,14 @@ async def get_media(message_text: str | None, onlyfiles: list, folder: str = "ф
                     media.attach_video(video=types.InputFile(f"./{folder}/{onlyfiles[file]}"),
                                        caption=message_text,
                                        parse_mode="Markdown")
-                    break
+                    continue
             else:
                 media.attach_photo(photo=types.InputFile(f"./{folder}/{onlyfiles[file]}"),
                                    caption=message_text,
                                    parse_mode="Markdown")
 
     return media
+
 
 
 def download_media(self, media_id):

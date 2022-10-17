@@ -6,17 +6,13 @@
   <component name="ChangeListManager">
     <list default="true" id="2e2d8785-816b-4eb1-92a7-8c04737c99fe" name="Changes" comment="new">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/1.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/1.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/assahit.session" beforeDir="false" afterPath="$PROJECT_DIR$/src/assahit.session" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/classes.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/classes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/db.db" beforeDir="false" afterPath="$PROJECT_DIR$/src/db.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/db.db-shm" beforeDir="false" afterPath="$PROJECT_DIR$/src/db.db-shm" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/db.db-wal" beforeDir="false" afterPath="$PROJECT_DIR$/src/db.db-wal" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/db.db" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/functions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main2.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main2.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/message_from_rec_channel.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/src/message_from_rec_channel.pkl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/mkmkmkmosdlsmkmkkmkmkmdlmdlmoaaaosqwqhit.session" beforeDir="false" afterPath="$PROJECT_DIR$/src/mkmkmkmosdlsmkmkkmkmkmdlmdlmoaaaosqwqhit.session" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/texts.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/texts.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,6 +37,12 @@
       <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
     </file-type-list>
   </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/src/main2.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/../../програмная хрень/Lib/site-packages/aiogram/types/input_file.py" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/../../програмная хрень/Lib/site-packages/aiogram/types/input_media.py" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/../../програмная хрень/Lib/site-packages/aiogram/utils/executor.py" root0="SKIP_INSPECTION" />
+  </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
@@ -52,13 +54,13 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">
-    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
-  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ToolWindowRun.ShowToolbar&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/bots Telegram/pars_rus_ua/bot_2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;
+  }
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="D:\bots Telegram\vk-ribbon_in_tg\src" />
@@ -203,10 +205,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.main2 (1)" />
-        <item itemvalue="Python.functions" />
-        <item itemvalue="Python.config" />
-        <item itemvalue="Python.testing" />
         <item itemvalue="Python.classes" />
+        <item itemvalue="Python.config" />
+        <item itemvalue="Python.functions" />
+        <item itemvalue="Python.testing" />
       </list>
     </recent_temporary>
   </component>
@@ -226,7 +228,14 @@
       <option name="project" value="LOCAL" />
       <updated>1665490484116</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="new">
+      <created>1665692639009</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1665692639009</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

@@ -2,7 +2,6 @@ import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 import json
-
 from aiogram import types
 from telethon import types as teletypes
 
@@ -92,22 +91,19 @@ class Channel:
 
 # @dataclass
 class Recomended_channel:
-    def __init__(self, key: int = None, url: str = None, name: str = None, messages_to_send: list = [],
-                 chat_id: int = None) -> None:
-        pass
+    def __init__(self, key: int = None, url: str = None, name: str = None, last_id: int = None) -> None:
         self.key = key
         self.url = url
         self.name = name
-        self.messages_to_send = messages_to_send
-        self.chat_id = chat_id
+        self.last_id = last_id
+
 
     def get_tuple(self):
         return (
             self.key,
             self.url,
             self.name,
-            json.dumps(self.messages_to_send),
-            self.chat_id
+            self.last_id,
 
         )
 
@@ -244,7 +240,6 @@ class Sqlite3_Database():
             insert_vals_str += '?'
             if len(values) - 1 != i:
                 insert_vals_str += ', '
-        print(f"""INSERT INTO {self.table_name} VALUES ({insert_vals_str})""", values)
         curs.execute(f"""INSERT INTO {self.table_name} VALUES ({insert_vals_str})""", values)
         conn.commit()
         conn.close()
@@ -303,6 +298,7 @@ class Users(Sqlite3_Database):
             return False
 
 
+
 class Channels(Sqlite3_Database):
     count = 0
 
@@ -357,10 +353,8 @@ class Channels(Sqlite3_Database):
         count = 0
         for i in range(user_point, len(channel_list)):
             if count < keyboard_length:
-                print(channel_list, " : ", i)
-
+                print(i)
                 ch_id = channel_list[i]
-                print(ch_id)
                 channel = self.get_channel(id=ch_id)
                 print(f"{callback}_{channel.key}")
                 keyboard.add(types.InlineKeyboardButton(text=channel.name, callback_data=f"{callback}_{channel.key}"))
@@ -386,12 +380,18 @@ class Recomended_channels(Channels):
             channel = Recomended_channel(key=channel_tuple[0],
                                          url=channel_tuple[1],
                                          name=channel_tuple[2],
-                                         messages_to_send=json.loads(channel_tuple[3]),
-                                         chat_id=channel_tuple[4])
+                                         last_id=channel_tuple[3])
             return channel
         else:
             return False
 
+    def get_link(self):
+        keys = self.get_keys()
+        array_link = []
+        for key in keys:
+            channel = self.get_channel(key)
+            array_link.append(channel.url)
+        return array_link
 
 class Admins(Sqlite3_Database):
     def __init__(self, db_file_name, args, table_name) -> None:
@@ -421,14 +421,13 @@ class Admins(Sqlite3_Database):
 
 class Message_from_rec_channel:
     def __init__(self):
-        self.list_object: list[teletypes.MessageMediaPhoto | teletypes.MessageMediaWebPage] = []
-        self.message_text = None
-        self.time = None
-        self.list_id: list = []
+        self.message_text: str = ""
         self.media: types.MediaGroup = types.MediaGroup()
+        self.photo = None
+        self.video= None
 
-    def add_elem(self, elem):
-        self.list_object.append(elem)
+    def set_media(self, elem: types.MediaGroup()):
+        self.media = elem
 
     def set_message_text(self, text: str) -> None:
         self.message_text = text
@@ -455,78 +454,41 @@ class nsql_database:
 class Message_from_rec_channels(nsql_database):
     def __init__(self) -> None:
         super().__init__()
-        self.links: dict = {}
-        self.name_channel: dict = {}  # channel_name | link_to_channel
+        self.len = 10
 
-    def __contains__(self, item: str) -> bool:
-        if item in self.links:
+    def __contains__(self, item: int | str) -> bool:
+        if item in self.data:
             return True
         else:
             return False
 
     def add_elem(self, group_id: int, elem: Message_from_rec_channel) -> None:
         self.data[group_id] = elem
+        self.len += 1
 
-    def add_link(self, link: str) -> None:
-        self.links[link] = -1
+    def __len__(self) -> int:
+        return self.len
 
-    def add_channel_name(self, name_channel: str, link: str) -> None:
-        self.name_channel[name_channel] = link
+    def __delitem__(self, id) -> None:
+        if id in self.data:
+            del self.data[id]
+            self.len -= 1
 
-    def get_array_link(self) -> dict:
-        return self.links
+if __name__ == "__main__":
+    messages_from_rec_channels = Message_from_rec_channels()
+    messages_from_rec_channels.add_elem(group_id=0,
+                                        elem=Message_from_rec_channel())
+    messages_from_rec_channels.add_elem(group_id=1,
+                                        elem=Message_from_rec_channel())
 
-    def get_data(self) -> dict:
-        return self.data
+    messages_from_rec_channels.add_elem(group_id=2,
+                                        elem=Message_from_rec_channel())
 
-    def set_min_id(self, key: str, min_id: int) -> None:
-        self.links[key] = min_id
+    messages_from_rec_channels.add_elem(group_id=3,
+                                        elem=Message_from_rec_channel())
+    print(messages_from_rec_channels.data)
+    del messages_from_rec_channels[2]
+    print(messages_from_rec_channels.data)
 
-    def del_channel(self, channel_name: str) -> None:
-        link = self.name_channel[channel_name]
-        del self.name_channel[channel_name]
-        del self.links[link]
 
-    def get_channel_keyboard(self, user_point: int, channel_dict: dict,
-                             keyboard_length: int) -> types.InlineKeyboardMarkup:
-        keyboard = types.InlineKeyboardMarkup(row_width=2)
 
-        callback = "rec_channels"
-        count = 0
-        keys = list(channel_dict.keys())
-        for i in range(user_point, len(channel_dict)):
-            if count < keyboard_length:
-                print(channel_dict, " : ", i)
-                channel_name = keys[i]
-                # link = channel_dict[channel_name]
-
-                # print(f"{callback}_{link}")
-                keyboard.add(types.InlineKeyboardButton(text=channel_name, callback_data=f"{callback}_{channel_name}"))
-            else:
-                break
-            count += 1
-        keyboard.add(
-            types.InlineKeyboardButton(text="<", callback_data=f"{callback}_<"),
-            types.InlineKeyboardButton(text=">", callback_data=f"{callback}_>")
-        )
-        if self.__class__.__name__ == "Message_from_rec_channels":
-            keyboard.add(types.InlineKeyboardButton(text="Назад", callback_data="back_to_admin_panel"))
-        return keyboard
-
-    # def get_elem(self, id: int) -> Admin | bool:
-    #     if id in self:
-    #         message_tuple = self.get_elem_sqllite3(id)
-    #         message = Message_from_rec_channel(
-    #             key=message_tuple[0],
-    #             text=message_tuple[1],
-    #             photo_path=message_tuple[2],
-    #             video_path=message_tuple[3],
-    #             audio_path=message_tuple[4],
-    #             document_path=message_tuple[5],
-    #             sticker_path=message_tuple[6],
-    #             video_note_path=message_tuple[7],
-    #             voice_path=message_tuple[8],
-    #         )
-    #         return message
-    #     else:
-    #         return False

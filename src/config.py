@@ -1,7 +1,6 @@
 import datetime
 import logging
 import pickle
-import random
 
 from aiogram import Bot, Dispatcher
 from flask import Flask
@@ -19,7 +18,7 @@ def load_object(file_name="message_from_rec_channel.pkl") -> Message_from_rec_ch
     return data
 
 
-API_TOKEN = "5333826486:AAEJwFwS80WMoGLKBiQ0wecfBQ0jysxK81A"
+API_TOKEN = "5333826486:AAE7DIzcz6Fv84X453UyLsCpt5MYA2QMaY0"
 
 # bot = telebot.TeleBot(token=API_TOKEN)
 bot = Bot(token=API_TOKEN)
@@ -83,44 +82,27 @@ channels = Channels(db_file_name=db_file_name, args=channels_args, table_name=ch
 Channels.count = len(channels.get_keys())
 
 # rec_channels
-# rec_channels_table_name = "rec_channels"
-# rec_channels_args = {
-#     'key': 'integer',
-#     'url': 'text',
-#     'name': 'text',
-#     'messages_to_send': 'blob',
-#     "chat_id": "integer"
-#
-# }
-# rec_channels = Recomended_channels(db_file_name=db_file_name, args=rec_channels_args,
-#                                    table_name=rec_channels_table_name)
-# Recomended_channels.count = len(rec_channels.get_keys())
+rec_channels_table_name = "rec_channels"
+rec_channels_args = {
+    'key': 'integer',
+    'url': 'text',
+    'name': 'text',
+    'min_id': 'integer',
+}
 
-# messages_from_rec_channels
-# messages_from_rec_channelstable_name = "messages_from_rec_channels"
-# messages_from_rec_channels_args = {
-#     'key': 'integer',
-#     'users': 'blob',
-#     'url': 'text',
-#     'name': 'text',
-#     "chat_id": "integer",
-#     "last_id_mes": "integer",
+rec_channels = Recomended_channels(db_file_name=db_file_name, args=rec_channels_args,
+                                   table_name=rec_channels_table_name)
+Recomended_channels.count = len(rec_channels.get_keys())
 
-# }
-# messages_from_rec_channels = Message_from_rec_channels(db_file_name=db_file_name,
-# args=messages_from_rec_channels_args, table_name=messages_from_rec_channelstable_name)
-# Message_from_rec_channels.count = len(messages_from_rec_channels.get_keys())
+
 
 
 messages_from_rec_channels = Message_from_rec_channels()#load_object(file_name="message_from_rec_channel.pkl")
-# messages_from_rec_channels.add_link("https://t.me/vk_lenta")
-save_object(messages_from_rec_channels)
+
 
 api_id = 18142706
 api_hash = 'e9b070e6aee05f5437936312e49b6e45'
-# client = TelegramClient("mkmkmkmosdlsmkmkkmkmkmdlmdlmoaaaosqwqhit", api_id, api_hash)
 phone_number = "+79952605482"
-# client.start(phone=phone_number)
 
 # length_keyboard
 count_of_buts_in_keyboard = 7
@@ -132,13 +114,9 @@ ban_words = ["регистрируйся", "регистрируюся", "под
              "помогут подобрать лук", "обзоры вещей в reels", "можем найти почти любую вещь с интернета по фото"]
 
 
-if __name__ == '__main__':
-    messages_from_rec_channels = load_object(file_name="message_from_rec_channel.pkl")
-    print(messages_from_rec_channels.links)
-    print(len(messages_from_rec_channels.data))
-    # a = random.choice(list(messages_from_rec_channels.data.keys()))
-    # print(1, a)
-    for i in messages_from_rec_channels.data:
-        print(i, len(messages_from_rec_channels.data[i].list_object))
-        for x in messages_from_rec_channels.data[i].list_object:
-            print(type(x))
+if __name__ == "__main__":
+    channel = Recomended_channel()
+    channel.key = 0
+    channel.name = "name"
+    channel.url = "url"
+    rec_channels.add_channel(channel=channel)
