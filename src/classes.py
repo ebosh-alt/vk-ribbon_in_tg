@@ -438,7 +438,7 @@ class nsql_database:
         self.data = {}
 
     # Получение значения по ключу
-    def get_elem(self, key: int | str) -> bool | Message_from_rec_channel:
+    def get_elem(self, key: int | str) -> Message_from_rec_channel | bool:
         if key in self.data:
             return self.data[key]
         else:

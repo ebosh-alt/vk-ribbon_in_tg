@@ -26,7 +26,7 @@ instruction_text = {"ru": "Поддержать проект - https://www.donat
                           "separately.\n• In order for posts of your favorite channels to start appearing in your feed, you need to click " \
                           "the \"Add subscriptions\" button, then insert a link into the chat with the bot. !Links must "
                           "be inserted one at a time. "
-                          "You can find the link by clicking on the channel's avatar in the information section.\n• If you need to unsubscribe from " \
+                          "You can find the link by clicking on the channel'format_file avatar in the information section.\n• If you need to unsubscribe from " \
                           "the channel posts and remove it from the bot – click the \"My subscriptions\" button, "
                           "then select the desired channel from"
                           "the list of your subscriptions and click on it.\n• In case you don't want to see buttons at the bottom of the screen all " \

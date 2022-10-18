@@ -1,12 +1,11 @@
-import os
-import pickle
 from os import listdir
-
+import os
 from aiogram import types
 from aiogram.types import Chat
 
-from config import bot, ban_words
-from classes import Admin, Message_from_rec_channels
+from config import bot, ban_words, format_file
+from classes import Admin
+from src.config import messages_from_rec_channels
 
 
 def text_is_channel_url(name: Chat | None) -> bool:
@@ -60,19 +59,16 @@ async def get_media(message_text: str | None, onlyfiles: list, folder: str = "ф
     if media is None:
         media = types.MediaGroup()
 
-
-    s = [".mp4", ".mpeg", ".mpg", ".webm"]
-
     for file in range(len(onlyfiles)):
         if file != (len(onlyfiles)) - 1:
-            for i in s:
+            for i in format_file:
                 if i in onlyfiles[file]:
                     media.attach_video(video=types.InputFile(f"./{folder}/{onlyfiles[file]}"))
                     break
             else:
                 media.attach_photo(photo=types.InputFile(f"./{folder}/{onlyfiles[file]}"))
         else:
-            for i in s:
+            for i in format_file:
                 if i in onlyfiles[file]:
                     media.attach_video(video=types.InputFile(f"./{folder}/{onlyfiles[file]}"),
                                        caption=message_text,
@@ -85,21 +81,33 @@ async def get_media(message_text: str | None, onlyfiles: list, folder: str = "ф
 
     return media
 
+def check_text(text: str):
+    if text is not None:
+        if len(text) > 1:
+            return True
 
 
-def download_media(self, media_id):
-    try:
-        msg_media_id = int(media_id)
-        output = str('usermedia/{}'.format(msg_media_id))
-        print('Downloading media wit   h name {}...'.format(output))
-        output = self.client.download_msg_media(
-            msg_media_id,
-            file_path=output,
-            progress_callback=self.client2.download_progress_callback)
-        print('Media downloaded to {}!'.format(output))
 
-    except ValueError:
-        print('Invalid media ID given!')
+def media_presence_check(group_id: int | None, id: int | None, text: str | None ) -> bool:
+    if group_id is None:
+        if id not in messages_from_rec_channels:
+            if check_text(text=text):
+                if check_advertising(text.lower()):
+                    return True
+    return False
+
+
+def clearing_queue():
+    if len(messages_from_rec_channels) > 300:
+        del messages_from_rec_channels[list(messages_from_rec_channels.keys())[0]]
+
+
+def get_check_format(file: str) -> bool:
+    for i in format_file:
+        if i in file:
+            return True
+
+    return False
 
 
 def check_advertising(text: str):
@@ -107,3 +115,13 @@ def check_advertising(text: str):
         if word in text:
             return False
     return True
+
+
+def del_folders() -> None:
+    folders = [f for f in listdir(f"./rec/")]
+    for folder in folders:
+        files = [f for f in listdir(f"./rec/{folder}")]
+        for file in files:
+            os.remove(f"./rec/{folder}/{file}")
+        os.rmdir(f"./rec/{folder}")
+

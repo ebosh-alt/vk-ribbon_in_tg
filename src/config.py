@@ -107,6 +107,7 @@ phone_number = "+79952605482"
 # length_keyboard
 count_of_buts_in_keyboard = 7
 days_for_mes_rec = datetime.timedelta(days=3)
+format_file = [".mp4", ".mpeg", ".mpg", ".webm"]
 
 ban_words = ["регистрируйся", "регистрируюся", "подпишись", "переходи", "ссылка на подписку",
              "жми на кнопочку", "перейди", "огромный ассортимент", "скидки в директе и лс", "держи ссылку",
