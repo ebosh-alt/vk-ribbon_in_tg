@@ -822,8 +822,12 @@ class BackGroundProcess:
     def __init__(self) -> None:
         self.p0 = Process()
 
-    def start_process(self, func):
-        self.p0 = Process(target=func)
+    def start_process(self, func, arg = None):
+        if arg is not None:
+            self.p0 = Process(target=func, args=(arg,))
+        else:
+            self.p0 = Process(target=func)
+            print("Getter")
         self.p0.start()
         print("back to main")
 
@@ -1044,66 +1048,68 @@ class GetterRecomendations(BackGroundProcess):
     def __init__(self) -> None:
         super().__init__()
 
-    async def main():
-        # Инициализация клиента
-        client = TelegramClient("assahit", api_id, api_hash)
-        # Старт клиента
-        await client.start(phone=phone_number)
-        # Получение всех ключей рекомендованных каналов
-        data = rec_channels.get_keys()
-        # Цикл по каждому каналу
-        for _ in data:
-            rec_channel = rec_channels.get_channel(_)
-            # получение новых сообщений в канале
-            if rec_channel.last_id == -1:
-                new_messages = await client.get_messages(rec_channel.url, limit=50)
-            else:
-                new_messages = await client.get_messages(rec_channel.url, limit=50, min_id=rec_channel.last_id)
-            # Цикл по новым сообщениям
-            for message in new_messages:
-                if media_presence_check(messages_from_rec_channels,group_id=message.grouped_id, id=message.id, text=message.text):
-                    message_from_rec_channel = Message_from_rec_channel()
-                    if message.media is not None:
-
-                        await message.download_media(f"./rec/{message.id}/")
-                        onlyfiles = [f for f in listdir(f"./rec/{message.id}/")]
-                        if get_check_format(file=onlyfiles[0]):
-                            message_from_rec_channel.video = types.InputFile(
-                                path_or_bytesio=f"./rec/{message.id}/{onlyfiles[0]}")
-                        else:
-                            message_from_rec_channel.photo = types.InputFile(
-                                path_or_bytesio=f"./rec/{message.id}/{onlyfiles[0]}")
-
-                    message_from_rec_channel.set_message_text(message.text)
-                    messages_from_rec_channels.add_elem(group_id=message.id,
-                                                        elem=message_from_rec_channel)
-                else:
-                    if message.grouped_id not in messages_from_rec_channels:
-                        messages_from_rec_channels.add_elem(group_id=message.grouped_id,
-                                                            elem=Message_from_rec_channel())
-                    rec_message = messages_from_rec_channels.get_elem(message.grouped_id)
-                    if message.media is not None:
-                        await message.download_media(f"./rec/{message.grouped_id}/")
-                        onlyfiles = [f for f in listdir(f"./rec/{message.grouped_id}/")]
-                        if check_text(text=message.text):
-                            if check_advertising(message.text.lower()):
-                                rec_message.media = await get_media(message_text=message.text,
-                                                                    onlyfiles=onlyfiles,
-                                                                    folder=f"rec/{message.grouped_id}",
-                                                                    media=rec_message.media)
-                                if rec_channel.last_id < message.id:
-                                    rec_channel.last_id = message.id
-                                    # rec_channels.update_info(elem=rec_channel)
-                            else:
-                                del messages_from_rec_channels[message.grouped_id]
-        del_folders()
-
-    def start_schedule(self):
-        schedule.every().minute.do(job_func=self.main)
+    def start_schedule(self, arg):
+        # schedule.every().minute.do(job_func=self.getter,args=(arg,))
         while True:
-            print("cleaner has been worked")
-            schedule.run_pending()
-            time.sleep(100)
+            print("RecGettter")
+            run(getter(arg))
+            # schedule.run_pending()
+            time.sleep(2)
+
+async def getter(arg):
+    print("YAe")
+    # Инициализация клиента
+    client = TelegramClient("assahit", api_id, api_hash)
+    # Старт клиента
+    await client.start(phone=phone_number)
+    # Получение всех ключей рекомендованных каналов
+    data = rec_channels.get_keys()
+    # Цикл по каждому каналу
+    for _ in data:
+        rec_channel = rec_channels.get_channel(_)
+        # получение новых сообщений в канале
+        if rec_channel.last_id == -1:
+            new_messages = await client.get_messages(rec_channel.url, limit=50)
+        else:
+            new_messages = await client.get_messages(rec_channel.url, limit=50, min_id=rec_channel.last_id)
+        # Цикл по новым сообщениям
+        for message in new_messages:
+            if media_presence_check(messages_from_rec_channels,group_id=message.grouped_id, id=message.id, text=message.text):
+                message_from_rec_channel = Message_from_rec_channel()
+                if message.media is not None:
+
+                    await message.download_media(f"./rec/{message.id}/")
+                    onlyfiles = [f for f in listdir(f"./rec/{message.id}/")]
+                    if get_check_format(file=onlyfiles[0]):
+                        message_from_rec_channel.video = types.InputFile(
+                            path_or_bytesio=f"./rec/{message.id}/{onlyfiles[0]}")
+                    else:
+                        message_from_rec_channel.photo = types.InputFile(
+                            path_or_bytesio=f"./rec/{message.id}/{onlyfiles[0]}")
+
+                message_from_rec_channel.set_message_text(message.text)
+                messages_from_rec_channels.add_elem(group_id=message.id,
+                                                    elem=message_from_rec_channel)
+            else:
+                if message.grouped_id not in messages_from_rec_channels:
+                    messages_from_rec_channels.add_elem(group_id=message.grouped_id,
+                                                        elem=Message_from_rec_channel())
+                rec_message = messages_from_rec_channels.get_elem(message.grouped_id)
+                if message.media is not None:
+                    await message.download_media(f"./rec/{message.grouped_id}/")
+                    onlyfiles = [f for f in listdir(f"./rec/{message.grouped_id}/")]
+                    if check_text(text=message.text):
+                        if check_advertising(message.text.lower()):
+                            rec_message.media = await get_media(message_text=message.text,
+                                                                onlyfiles=onlyfiles,
+                                                                folder=f"rec/{message.grouped_id}",
+                                                                media=rec_message.media)
+                            if rec_channel.last_id < message.id:
+                                rec_channel.last_id = message.id
+                                # rec_channels.update_info(elem=rec_channel)
+                        else:
+                            del messages_from_rec_channels[message.grouped_id]
+    del_folders()
 
 
 if __name__ == "__main__":
@@ -1115,5 +1121,5 @@ if __name__ == "__main__":
     # cleaner = Cleaner()
     # cleaner.start_process(func=cleaner.start_schedule)
     recomedations_getter = GetterRecomendations()
-    recomedations_getter.start_process(func=recomedations_getter.start_schedule)
+    recomedations_getter.start_process(func=recomedations_getter.start_schedule, arg=messages_from_rec_channels)
     executor.start_polling(dp, skip_updates=False)
