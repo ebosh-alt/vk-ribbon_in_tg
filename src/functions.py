@@ -2,10 +2,11 @@ from os import listdir
 import os
 from aiogram import types
 from aiogram.types import Chat
+from sympy import re
 
 from config import bot, ban_words, format_file
 from classes import Admin
-from src.config import messages_from_rec_channels
+# from src.config import messages_from_rec_channels
 
 
 def text_is_channel_url(name: Chat | None) -> bool:
@@ -88,7 +89,7 @@ def check_text(text: str):
 
 
 
-def media_presence_check(group_id: int | None, id: int | None, text: str | None ) -> bool:
+def media_presence_check(messages_from_rec_channels,group_id: int | None, id: int | None, text: str | None ) -> bool:
     if group_id is None:
         if id not in messages_from_rec_channels:
             if check_text(text=text):
@@ -97,9 +98,9 @@ def media_presence_check(group_id: int | None, id: int | None, text: str | None 
     return False
 
 
-def clearing_queue():
-    if len(messages_from_rec_channels) > 300:
-        del messages_from_rec_channels[list(messages_from_rec_channels.keys())[0]]
+# def clearing_queue(messages_from_rec_channels):
+#     if len(messages_from_rec_channels) > 300:
+#         del messages_from_rec_channels[list(messages_from_rec_channels.keys())[0]]
 
 
 def get_check_format(file: str) -> bool:
@@ -117,11 +118,41 @@ def check_advertising(text: str):
     return True
 
 
-def del_folders() -> None:
-    folders = [f for f in listdir(f"./rec/")]
-    for folder in folders:
-        files = [f for f in listdir(f"./rec/{folder}")]
-        for file in files:
-            os.remove(f"./rec/{folder}/{file}")
-        os.rmdir(f"./rec/{folder}")
+def del_folder(needed_folder:str) -> None:
+    # folders = [f for f in listdir(f"./rec/")]
+    # for folder in folders:
+    files = [f for f in listdir(f"./rec/{needed_folder}")]
+    for file in files:
+        os.remove(f"./rec/{needed_folder}/{file}")
+    os.rmdir(f"./rec/{needed_folder}")
+
+def get_media(needed_folder: str, message_text: str | None) -> types.MediaGroup():
+    files = [f for f in listdir(f"./rec/{needed_folder}")]
+    media = types.MediaGroup()
+    for file in range(len(files)):
+        if file != (len(files)) - 1:
+            for i in format_file:
+                if i in files[file]:
+                    media.attach_video(video=types.InputFile(f"./{needed_folder}/{files[file]}"))
+                    break
+            else:
+                media.attach_photo(photo=types.InputFile(f"./{needed_folder}/{files[file]}"))
+        else:
+            for i in format_file:
+                if i in files[file]:
+                    media.attach_video(video=types.InputFile(f"./{needed_folder}/{files[file]}"),
+                                        caption=message_text,
+                                        parse_mode="Markdown")
+                    break
+            else:
+                media.attach_photo(photo=types.InputFile(f"./{needed_folder}/{files[file]}"),
+                                    caption=message_text,
+                                    parse_mode="Markdown")
+    return media
+            
+
+
+
+
+
 

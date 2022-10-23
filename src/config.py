@@ -94,10 +94,16 @@ rec_channels = Recomended_channels(db_file_name=db_file_name, args=rec_channels_
                                    table_name=rec_channels_table_name)
 Recomended_channels.count = len(rec_channels.get_keys())
 
+#messages_from_rec_channels
+messages_from_rec_channels_table_name = "messages_from_rec_channels"
+messages_from_rec_channels_args = {
+    'key': 'text',
+    'message_text': 'text',
+}
+messages_from_rec_channels = Message_from_rec_channels(db_file_name=db_file_name, args=messages_from_rec_channels_args,
+                                   table_name=messages_from_rec_channels_table_name)
 
-
-
-messages_from_rec_channels = Message_from_rec_channels()#load_object(file_name="message_from_rec_channel.pkl")
+#load_object(file_name="message_from_rec_channel.pkl")
 
 
 api_id = 18142706

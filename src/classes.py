@@ -1,9 +1,11 @@
+from curses import KEY_B2
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 import json
 from aiogram import types
 from telethon import types as teletypes
+import multiprocessing
 
 
 ###Класс юзера
@@ -420,59 +422,48 @@ class Admins(Sqlite3_Database):
 
 
 class Message_from_rec_channel:
-    def __init__(self):
-        self.message_text: str = ""
-        self.media: types.MediaGroup = types.MediaGroup()
-        self.photo = None
-        self.video= None
-
-    def set_media(self, elem: types.MediaGroup()):
-        self.media = elem
+    def __init__(self, key:str=None, message_text: str = None):
+        self.key:str = key
+        self.message_text: str = message_text
 
     def set_message_text(self, text: str) -> None:
         self.message_text = text
+    
+    def get_tuple(self)->tuple:
+        return(
+            self.key,
+            self.message_text,
+        )
 
 
-class nsql_database:
-    def __init__(self) -> None:
-        self.data = {}
+class Message_from_rec_channels(Sqlite3_Database):
+    def __init__(self, db_file_name, args, table_name) -> None:
+        Sqlite3_Database.__init__(self, db_file_name, args, table_name)
+        self.len = 0
 
-    # Получение значения по ключу
-    def get_elem(self, key: int | str) -> Message_from_rec_channel | bool:
-        if key in self.data:
-            return self.data[key]
-        else:
-            return False
-
-    def __contains__(self, other) -> bool:
-        if other in self.data:
-            return True
-        else:
-            return False
-
-
-class Message_from_rec_channels(nsql_database):
-    def __init__(self) -> None:
-        super().__init__()
-        self.len = 10
-
-    def __contains__(self, item: int | str) -> bool:
-        if item in self.data:
-            return True
-        else:
-            return False
-
-    def add_elem(self, group_id: int, elem: Message_from_rec_channel) -> None:
-        self.data[group_id] = elem
-        self.len += 1
+    def add_elem(self, elem: Message_from_rec_channel) -> None:
+        self.len+=1
+        self.add_row(elem.get_tuple())
 
     def __len__(self) -> int:
         return self.len
 
-    def __delitem__(self, id) -> None:
-        if id in self.data:
-            del self.data[id]
-            self.len -= 1
+    def __delitem__(self, key:str) -> None:
+        self.del_row(key=key)
+        self.len -= 1
+
+    # Получение значения по ключу
+    def get_elem(self, key: str) -> Message_from_rec_channel | bool:
+        if key in self:
+            m_tuple = self.get_elem_sqllite3(id)
+            elem = Message_from_rec_channel(
+                key=m_tuple[0],
+                message_text=m_tuple[1],
+                )
+            return elem
+        else:
+            return False
+
 
 if __name__ == "__main__":
     messages_from_rec_channels = Message_from_rec_channels()

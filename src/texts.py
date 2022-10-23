@@ -52,6 +52,7 @@ veiw_delete_channel_text = {"ru": "Ваши подписки",
 absense_subcription_text = {"ru": "Подписки отсутствуют",
                             "en": "There are no subscriptions"}
 
+admin_panel_first_text = "АДМИН ПАНЕЛЬ"
 admin_panel_main_text = "Админ панель\nЧто хотите сделать?"
 
 # instruction_section
