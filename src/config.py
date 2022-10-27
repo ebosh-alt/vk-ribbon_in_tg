@@ -5,7 +5,7 @@ import pickle
 from aiogram import Bot, Dispatcher
 from flask import Flask
 from classes import *
-
+# from functions import delete_all_channel_folders
 
 def save_object(data, file_name="message_from_rec_channel.pkl") -> None:
     with open(file_name, "wb+") as fp:
@@ -18,7 +18,7 @@ def load_object(file_name="message_from_rec_channel.pkl") -> Message_from_rec_ch
     return data
 
 
-API_TOKEN = "5333826486:AAE7DIzcz6Fv84X453UyLsCpt5MYA2QMaY0"
+API_TOKEN = "5581532677:AAEptNY9KpYuhPCVhSSglw75vJRcoLYBr6I"
 
 # bot = telebot.TeleBot(token=API_TOKEN)
 bot = Bot(token=API_TOKEN)
@@ -96,8 +96,18 @@ Recomended_channels.count = len(rec_channels.get_keys())
 
 
 
+# messages_from_rec_channels
+messages_from_rec_channels_table_name = "messages_from_rec_channels"
+messages_from_rec_channels_args = {
+    'key': 'text',
+    'message_text': 'text',
+}
+messages_from_rec_channels = Message_from_rec_channels(db_file_name=db_file_name, args=messages_from_rec_channels_args,
+                                                       table_name=messages_from_rec_channels_table_name)
 
-messages_from_rec_channels = Message_from_rec_channels()#load_object(file_name="message_from_rec_channel.pkl")
+
+
+messages_from_rec_channels.len = len(messages_from_rec_channels.get_keys())
 
 
 api_id = 18142706
@@ -113,8 +123,7 @@ ban_words = ["регистрируйся", "регистрируюся", "под
              "жми на кнопочку", "перейди", "огромный ассортимент", "скидки в директе и лс", "держи ссылку",
              "скидка при первом заказе", "множество гарантий и довольных клиентов", "самые отзывчивые менеджеры",
              "помогут подобрать лук", "обзоры вещей в reels", "можем найти почти любую вещь с интернета по фото"]
-
-
+count_message = 200
 if __name__ == "__main__":
     channel = Recomended_channel()
     channel.key = 0

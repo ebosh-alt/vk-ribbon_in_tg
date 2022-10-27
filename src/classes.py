@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from pathlib import Path
 import json
 from aiogram import types
-from telethon import types as teletypes
 
 
 ###Класс юзера
@@ -89,6 +88,21 @@ class Channel:
         )
 
 
+class Message_from_rec_channel:
+    def __init__(self, key: str = None, message_text: str = None):
+        self.key: str = key
+        self.message_text: str = message_text
+
+    def set_message_text(self, text: str) -> None:
+        self.message_text = text
+
+    def get_tuple(self) -> tuple:
+        return (
+            self.key,
+            self.message_text,
+        )
+
+
 # @dataclass
 class Recomended_channel:
     def __init__(self, key: int = None, url: str = None, name: str = None, last_id: int = None) -> None:
@@ -96,7 +110,6 @@ class Recomended_channel:
         self.url = url
         self.name = name
         self.last_id = last_id
-
 
     def get_tuple(self):
         return (
@@ -200,7 +213,7 @@ class Sqlite3_Database():
                     count += 1
         conn = self.sqlite_connect()
         curs = conn.cursor()
-        print(f'''CREATE TABLE {self.table_name} ({str_for_sql_req})''')
+        # print(f'''CREATE TABLE {self.table_name} ({str_for_sql_req})''')
         curs.execute(f'''CREATE TABLE {self.table_name} ({str_for_sql_req})''')
         conn.commit()
         conn.close()
@@ -208,19 +221,28 @@ class Sqlite3_Database():
     def get_elem_sqllite3(self, key: int | str) -> tuple:
         conn = self.sqlite_connect()
         curs = conn.cursor()
-        curs.execute(f'''SELECT * from {self.table_name} where key = {key}''')
+        if key.__class__.__name__:
+            curs.execute(f"""SELECT * from {self.table_name} where key = '{key}'""")
+        else:
+            curs.execute(f'''SELECT * from {self.table_name} where key = {key}''')
         answ = curs.fetchone()
         conn.close()
+        # print(answ)
         return answ
 
     def __contains__(self, other: int | str) -> bool:
         conn = self.sqlite_connect()
         curs = conn.cursor()
-        curs.execute(f"SELECT 1 FROM {self.table_name} WHERE key={other}")
+        if other.__class__.__name__ == "str":
+            curs.execute(f"SELECT 1 FROM {self.table_name} WHERE key='{other}'")
+            # print("yes")
+        else:
+            curs.execute(f"SELECT 1 FROM {self.table_name} WHERE key={other}")
         if curs.fetchone() is not None:
             conn.close()
             return True
         else:
+            # print(other)
             conn.close()
             return False
 
@@ -251,7 +273,7 @@ class Sqlite3_Database():
         conn.commit()
         conn.close()
 
-    def update_info(self, elem: User | Admin | Channel | Recomended_channel) -> None:
+    def update_info(self, elem: User | Admin | Channel | Recomended_channel | Message_from_rec_channel) -> None:
         conn = self.sqlite_connect()
         curs = conn.cursor()
         info = elem.get_tuple()
@@ -298,7 +320,6 @@ class Users(Sqlite3_Database):
             return False
 
 
-
 class Channels(Sqlite3_Database):
     count = 0
 
@@ -314,10 +335,10 @@ class Channels(Sqlite3_Database):
         self.add_row(channel.get_tuple())
 
     def del_channel(self, key: int) -> None:
-        if self.__class__.__name__ == "Channels":
-            Channels.count -= 1
-        else:
-            Recomended_channels.count -= 1
+        # if self.__class__.__name__ == "Channels":
+        #     Channels.count -= 1
+        # else:
+        #     Recomended_channels.count -= 1
         self.del_row(key=key)
 
     def get_channel(self, id: int) -> Channel | bool:
@@ -353,10 +374,10 @@ class Channels(Sqlite3_Database):
         count = 0
         for i in range(user_point, len(channel_list)):
             if count < keyboard_length:
-                print(i)
+                # print(i)
                 ch_id = channel_list[i]
                 channel = self.get_channel(id=ch_id)
-                print(f"{callback}_{channel.key}")
+                # print(f"{callback}_{channel.key}")
                 keyboard.add(types.InlineKeyboardButton(text=channel.name, callback_data=f"{callback}_{channel.key}"))
             else:
                 break
@@ -393,6 +414,7 @@ class Recomended_channels(Channels):
             array_link.append(channel.url)
         return array_link
 
+
 class Admins(Sqlite3_Database):
     def __init__(self, db_file_name, args, table_name) -> None:
         Sqlite3_Database.__init__(self, db_file_name, args, table_name)
@@ -419,60 +441,43 @@ class Admins(Sqlite3_Database):
             return False
 
 
-class Message_from_rec_channel:
-    def __init__(self):
-        self.message_text: str = ""
-        self.media: types.MediaGroup = types.MediaGroup()
-        self.photo = None
-        self.video= None
+class Message_from_rec_channels(Sqlite3_Database):
+    def __init__(self, db_file_name, args, table_name) -> None:
+        Sqlite3_Database.__init__(self, db_file_name, args, table_name)
+        self.len = 0
 
-    def set_media(self, elem: types.MediaGroup()):
-        self.media = elem
-
-    def set_message_text(self, text: str) -> None:
-        self.message_text = text
-
-
-class nsql_database:
-    def __init__(self) -> None:
-        self.data = {}
-
-    # Получение значения по ключу
-    def get_elem(self, key: int | str) -> Message_from_rec_channel | bool:
-        if key in self.data:
-            return self.data[key]
-        else:
-            return False
-
-    def __contains__(self, other) -> bool:
-        if other in self.data:
-            return True
-        else:
-            return False
-
-
-class Message_from_rec_channels(nsql_database):
-    def __init__(self) -> None:
-        super().__init__()
-        self.len = 10
-
-    def __contains__(self, item: int | str) -> bool:
-        if item in self.data:
-            return True
-        else:
-            return False
-
-    def add_elem(self, group_id: int, elem: Message_from_rec_channel) -> None:
-        self.data[group_id] = elem
+    def add_elem(self, elem: Message_from_rec_channel) -> None:
         self.len += 1
+        self.add_row(elem.get_tuple())
 
     def __len__(self) -> int:
         return self.len
 
-    def __delitem__(self, id) -> None:
-        if id in self.data:
-            del self.data[id]
-            self.len -= 1
+    def __delitem__(self, key: str) -> None:
+        self.del_row(key=key)
+        self.len -= 1
+
+    # def __contains__(self, key: str)->bool:
+    #     if key in self.get_keys():
+    #         return True
+    #     else:
+    #         return False
+    # Получение значения по ключу
+    def get_elem(self, key: str) -> Message_from_rec_channel | bool:
+        if key in self.get_keys():
+            m_tuple = self.get_elem_sqllite3(key)
+            if m_tuple is None:
+                # print("tuple-None")
+                return False
+            elem = Message_from_rec_channel(
+                key=m_tuple[0],
+                message_text=m_tuple[1],
+            )
+            return elem
+        else:
+            # print(self.get_keys())
+            return False
+
 
 if __name__ == "__main__":
     messages_from_rec_channels = Message_from_rec_channels()
@@ -486,9 +491,6 @@ if __name__ == "__main__":
 
     messages_from_rec_channels.add_elem(group_id=3,
                                         elem=Message_from_rec_channel())
-    print(messages_from_rec_channels.data)
+    # print(messages_from_rec_channels.data)
     del messages_from_rec_channels[2]
-    print(messages_from_rec_channels.data)
-
-
-
+    # print(messages_from_rec_channels.data)

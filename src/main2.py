@@ -1,4 +1,5 @@
 import asyncio
+import multiprocessing
 import time
 import random
 
@@ -19,8 +20,8 @@ from keyboard import *
 async def test():
     for gr_id in messages_from_rec_channels.data:
         message_from_rec_channel = messages_from_rec_channels.get_elem(gr_id)
-        print(gr_id)
-        print(message_from_rec_channel.__dict__)
+        # print(gr_id)
+        # print(message_from_rec_channel.__dict__)
         await bot.send_message(chat_id=686171972,
                                text=message_from_rec_channel.message_text)
 
@@ -82,6 +83,9 @@ async def admin(message):
     user.keyboard_point = 0
     user.bot_messageId = None
     admin = admins.get_elem(message.from_user.id)
+    await bot.send_message(chat_id=user_id,
+                           text=admin_panel_first_text,
+                           reply_markup=types.ReplyKeyboardRemove())
     new_mes = await bot.send_message(chat_id=user_id,
                                      text=admin_panel_main_text,
                                      reply_markup=admin_main_keyboard)
@@ -141,7 +145,7 @@ async def main_admin_panel(call):
                      f"Добавили за 24Ч:{added_in_24_hours}\n" \
                      f"Добавили за 7 дней:{added_in_7_days}\n" \
                      f"Добавили за месяц:{added_in_month}"
-        print(user_id, admin.bot_messageId, statistics)
+        # print(user_id, admin.bot_messageId, statistics)
         await bot.edit_message_text(chat_id=user_id,
                                     message_id=admin.bot_messageId,
                                     text=statistics,
@@ -456,8 +460,10 @@ async def data_entry_by_admin(message):
         admin.mailing_message_id = mailing_mes.message_id
 
     elif flag == 5:
-        admin.mailing_photo_path = await bot.download_file(
-            bot.get_file(message.photo[len(message.photo) - 1].file_id).file_path)
+        # print(message)
+        # await bot.send_photo(chat_id=user_id,
+        #                      photo=message.photo[0].file_id)
+        admin.mailing_photo_path = message.photo[0].file_id
         tuple_data_for_mailing_mes = get_tuple_data_for_mailing_mes(admin=admin)
         mailing_section_keyboard = types.InlineKeyboardMarkup(row_width=1)
         mailing_section_keyboard.add(mailing_section_del_photo_but)
@@ -487,12 +493,13 @@ async def data_entry_by_admin(message):
                                         message_id=admin.bot_messageId,
                                         text=mailing_section_5_text.format(mailing_url_but=admin.mailing_but_url),
                                         reply_markup=back_to_mailing_section_keyboard)
-        else:
-            admin.flag = 6
-            await bot.edit_message_text(chat_id=user_id,
-                                        message_id=admin.bot_messageId,
-                                        text=mailing_section_4_text,
-                                        reply_markup=back_to_mailing_section_keyboard)
+        # else:
+        #     pass
+            # admin.flag = 6
+            # await bot.edit_message_text(chat_id=user_id,
+            #                             message_id=admin.bot_messageId,
+            #                             text=mailing_section_4_text,
+            #                             reply_markup=back_to_mailing_section_keyboard)
     elif flag == 7:
         admin.mailing_but_name = message.text
         admin.flag = 4
@@ -514,6 +521,7 @@ async def data_entry_by_admin(message):
                                                  text=tuple_data_for_mailing_mes[0],
                                                  reply_markup=tuple_data_for_mailing_mes[1])
         else:
+
             mailing_mes = await bot.send_photo(chat_id=user_id,
                                                photo=tuple_data_for_mailing_mes[2],
                                                caption=tuple_data_for_mailing_mes[0],
@@ -573,6 +581,8 @@ async def delete_channels(call: types.CallbackQuery):
                 admin.keyboard_point -= count_of_buts_in_keyboard
         else:
             rec_channels.del_channel(str(call.data).split("_")[-1])
+            delete_all_channel_folders(rec_channels.get_channel(str(call.data).split("_")[-1]),
+                                       messages_from_rec_channels=messages_from_rec_channels)
             if admin.keyboard_point == Recomended_channels.count:
                 admin.keyboard_point -= count_of_buts_in_keyboard
         if len(rec_channels.get_keys()) == 0:
@@ -689,64 +699,98 @@ async def start_logic(message: types.Message):
                                        reply_markup=keyboard)
 
         elif message.text in ["Рекомендации", "Rec"]:
-            if len(messages_from_rec_channels) < 16:
-                for _ in messages_from_rec_channels.data:
-                    rec_channel = messages_from_rec_channels.get_elem(_)
-                    if len(rec_channel.media.media) > 1:
-                        messages = await bot.send_media_group(chat_id=user_id,
-                                                              media=rec_channel.media)
-                        for mes in messages:
-                            user.messages_to_del.append(mes.message_id)
-                    elif rec_channel.photo is not None:
-                        mes = await bot.send_photo(chat_id=user_id,
-                                                   photo=rec_channel.photo,
-                                                   caption=rec_channel.message_text,
-                                                   parse_mode="Markdown")
+            messages_from_rec_channels_list = messages_from_rec_channels.get_keys()
+            # if len(messages_from_rec_channels_list) < 16:
+            #     for _ in messages_from_rec_channels_list:
+            #         rec_message = messages_from_rec_channels.get_elem(_)
+            #         try:
+            #             media = get_media_(needed_folder=_,
+            #                                message_text=rec_message.message_text)
+            #         except:
+            #             continue
+            #         try:
+            #             if type(media) != tuple:
+            #                 messages = await bot.send_media_group(chat_id=user_id,
+            #                                                       media=media)
+            #                 for mes in messages:
+            #                     user.messages_to_del.append(mes.message_id)
+            #
+            #             elif media[1] == "photo":
+            #                 mes = await bot.send_photo(chat_id=user_id,
+            #                                                photo=media[0],
+            #                                                caption=rec_message.message_text,
+            #                                                parse_mode="Markdown")
+            #                 user.messages_to_del.append(mes.message_id)
+            #
+            #             elif media[1] == "video":
+            #                 mes = await bot.send_video(chat_id=user_id,
+            #                                            video=media[0],
+            #                                            caption=rec_message.message_text,
+            #                                            parse_mode="Markdown")
+            #
+            #                 user.messages_to_del.append(mes.message_id)
+            #             else:
+            #                 mes = await bot.send_message(chat_id=user_id,
+            #                                              text=rec_message.message_text,
+            #                                              parse_mode="Markdown",
+            #                                              disable_web_page_preview=False)
+            #                 user.messages_to_del.append(mes.message_id)
+            #         except Exception as ex:
+            #             print(ex)
+
+            channels_to_rec = []
+            while len(channels_to_rec) <= 15:
+                message = random.choice(messages_from_rec_channels_list)
+                if message not in channels_to_rec:
+                    channels_to_rec.append(message)
+
+            array_media = []
+            for _ in channels_to_rec:
+                rec_message = messages_from_rec_channels.get_elem(_)
+                media = get_media_(needed_folder=_,
+                                   message_text=rec_message.message_text)
+                array_media.append((media, rec_message))
+                # except:
+                #     if rec_message is not None:
+                #         mes = await bot.send_message(chat_id=user_id,
+                #                                      text=rec_message.message_text,
+                #                                      parse_mode="Markdown",
+                #                                      disable_web_page_preview=False)
+                #         user.messages_to_del.append(mes.message_id)
+
+            for i in array_media:
+                media = i[0]
+                rec_message = i[1]
+                if type(media) != tuple:
+                    messages = await bot.send_media_group(chat_id=user_id,
+                                                          media=media)
+                    for mes in messages:
                         user.messages_to_del.append(mes.message_id)
-                    elif rec_channel.video is not None:
-                        mes = await bot.send_video(chat_id=user_id,
-                                                   video=rec_channel.video,
-                                                   caption=rec_channel.message_text,
-                                                   parse_mode="Markdown")
 
-                        user.messages_to_del.append(mes.message_id)
-                    else:
-                        mes = await bot.send_message(chat_id=user_id,
-                                                     text=rec_channel.message_text,
-                                                     parse_mode="Markdown",
-                                                     disable_web_page_preview=False)
-                        user.messages_to_del.append(mes.message_id)
+                elif media[1] == "photo":
+                    mes = await bot.send_photo(chat_id=user_id,
+                                               photo=media[0],
+                                               caption=rec_message.message_text,
+                                               parse_mode="Markdown")
+                    user.messages_to_del.append(mes.message_id)
 
+                elif media[1] == "video":
+                    mes = await bot.send_video(chat_id=user_id,
+                                               video=media[0],
+                                               caption=rec_message.message_text,
+                                               parse_mode="Markdown")
 
-            else:
-                channels_to_rec = []
-                while len(channels_to_rec) < 16:
-                    message = random.choice(list(messages_from_rec_channels.data.values()))
-                    if message not in channels_to_rec:
-                        channels_to_rec.append(message)
-
-                for rec_channel in channels_to_rec:
-                    if len(rec_channel.media.media) != 0:
-
-                        try:
-                            messages = await bot.send_media_group(chat_id=user_id,
-                                                                  media=rec_channel.media)
-
-                            for mes in messages:
-                                user.messages_to_del.append(mes.message_id)
-                            users.update_info(elem=user)
-                        except:
-                            pass
-
-                    else:
-                        try:
-                            await bot.send_message(chat_id=user_id,
-                                                   text=rec_channel.message_text,
-                                                   parse_mode="Markdown",
-                                                   disable_web_page_preview=True)
-                        except:
-                            pass
-            users.update_info(elem=user)
+                    user.messages_to_del.append(mes.message_id)
+                elif len(media.media) == 0:
+                    mes = await bot.send_message(chat_id=user_id,
+                                                 text=rec_message.message_text,
+                                                 parse_mode="Markdown",
+                                                 disable_web_page_preview=False)
+                    user.messages_to_del.append(mes.message_id)
+                    # except Exception as ex:
+                    #
+                    #     print(ex)
+            # users.update_info(elem=user)
 
     elif user.flag == 3:
         if message.text in ["Продолжить", "Continue"]:
@@ -822,8 +866,12 @@ class BackGroundProcess:
     def __init__(self) -> None:
         self.p0 = Process()
 
-    def start_process(self, func):
-        self.p0 = Process(target=func)
+    def start_process(self, func, arg=None):
+        if arg is not None:
+            self.p0 = Process(target=func, args=(arg,))
+        else:
+            self.p0 = Process(target=func)
+            print("Getter")
         self.p0.start()
         print("back to main")
 
@@ -888,8 +936,10 @@ class Get_new_message(BackGroundProcess):
         await client.start(phone=phone_number)
         for key in channels_list:
             channel = channels.get_channel(key)
-            new_message = await client.get_messages(channel.url, limit=1)
-
+            try:
+                new_message = await client.get_messages(channel.url, limit=1)
+            except:
+                continue
             if channel.last_id_mes is None:
                 channel.last_id_mes = new_message[0].id
                 channels.update_info(channel)
@@ -1040,69 +1090,106 @@ class Get_new_message(BackGroundProcess):
 #             run(self.cleaner())
 #             time.sleep(100)
 
+class GetterRecomendations(BackGroundProcess):
+    def __init__(self) -> None:
+        super().__init__()
 
-async def main():
+    def start_schedule(self):
+        # schedule.every().minute.do(job_func=self.getter,args=(arg,))
+        while True:
+            print("RecGettter")
+            run(getter())
+            # schedule.run_pending()
+            time.sleep(2)
+
+
+async def getter():
+    print("YAe")
+    # Инициализация клиента
     client = TelegramClient("assahit", api_id, api_hash)
     await client.start(phone=phone_number)
-    while True:
-        data = rec_channels.get_keys()
-        for _ in data:
-            rec_channel = rec_channels.get_channel(_)
-            if rec_channel.last_id == -1:
-                new_messages = await client.get_messages(rec_channel.url, limit=50)
+
+    # Получение всех ключей рекомендованных каналов
+    data = rec_channels.get_keys()
+    # Цикл по каждому каналу
+    for _ in data:
+        rec_channel = rec_channels.get_channel(_)
+        # получение новых сообщений в канале
+        if rec_channel.last_id == -1:
+            new_messages = await client.get_messages(rec_channel.url, limit=50)
+        else:
+            new_messages = await client.get_messages(rec_channel.url, limit=50, min_id=rec_channel.last_id)
+        # Цикл по новым сообщениям
+        for message in new_messages: #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if media_presence_check(messages_from_rec_channels, group_id=message.grouped_id, id=f"{_}+{message.id}",
+                                    text=message.text):
+                if check_text(text=message.text):
+                    if check_advertising(message.text.lower()):
+                        message_from_rec_channel = Message_from_rec_channel()
+                        if message.media is not None:
+                            await message.download_media(f"./rec/{_}+{message.id}/")
+
+                    # onlyfiles = [f for f in listdir(f"./rec/{message.id}/")]
+                    # if get_check_format(file=onlyfiles[0]):
+                    #     message_from_rec_channel.video = types.InputFile(
+                    #         path_or_bytesio=f"./rec/{message.id}/{onlyfiles[0]}")
+                    # else:
+                    #     message_from_rec_channel.photo = types.InputFile(
+                    #         path_or_bytesio=f"./rec/{message.id}/{onlyfiles[0]}")
+                        message_from_rec_channel.key = f"{_}+{message.id}"
+                        message_from_rec_channel.set_message_text(message.text)
+                        messages_from_rec_channels.add_elem(elem=message_from_rec_channel)
+                        messages_from_rec_channels.update_info(elem=message_from_rec_channel)
             else:
-                new_messages = await client.get_messages(rec_channel.url, limit=50, min_id=rec_channel.last_id)
 
-            for message in new_messages:
-                if media_presence_check(group_id=message.grouped_id, id=message.id, text=message.text):
-                    message_from_rec_channel = Message_from_rec_channel()
-                    if message.media is not None:
+                # if f"{_}+{message.grouped_id}" not in messages_from_rec_channels.get_keys():
+                #     messages_from_rec_channels.add_elem(elem=Message_from_rec_channel(key=f"{_}+{message.grouped_id}"))
+                #
+                # print(f"{_}+{message.grouped_id}")
+                # print(messages_from_rec_channels.get_keys())
+                # rec_message = messages_from_rec_channels.get_elem(key=f"{_}+{message.grouped_id}")
+                # print(f"{_}+{message.grouped_id}")
+                if message.grouped_id is None:
+                    continue
+                rec_message = messages_from_rec_channels.get_elem(key=f"{_}+{message.grouped_id}")
+                if not rec_message:
+                    rec_message = Message_from_rec_channel()
+                    rec_message.key = f"{_}+{message.grouped_id}"
+                    messages_from_rec_channels.add_elem(elem=rec_message)
+                    rec_message = messages_from_rec_channels.get_elem(key=f"{_}+{message.grouped_id}")
+                # print(rec_message)
+                if message.media is not None:
+                    await message.download_media(f"./rec/{_}+{message.grouped_id}/")
+                    # onlyfiles = [f for f in listdir(f"./rec/{message.grouped_id}/")]
+                    if check_text(text=message.text):
+                        if check_advertising(message.text.lower()):
+                            # rec_message.media = await get_media(message_text=message.text,
+                            #                                     onlyfiles=onlyfiles,
+                            #                                     folder=f"rec/{message.grouped_id}",
+                            #                                     media=rec_message.media)
+                            rec_message.message_text = message.text
 
-                        await message.download_media(f"./rec/{message.id}/")
-                        onlyfiles = [f for f in listdir(f"./rec/{message.id}/")]
-                        if get_check_format(file=onlyfiles[0]):
-                            message_from_rec_channel.video = types.InputFile(
-                                path_or_bytesio=f"./rec/{message.id}/{onlyfiles[0]}")
+                            if rec_channel.last_id < message.id:
+                                rec_channel.last_id = message.id
+                                # rec_channels.update_info(elem=rec_channel)
                         else:
-                            message_from_rec_channel.photo = types.InputFile(
-                                path_or_bytesio=f"./rec/{message.id}/{onlyfiles[0]}")
+                            del messages_from_rec_channels[f"{_}+{message.grouped_id}"]
+                            del_folder(needed_folder=f"{_}+{message.grouped_id}")
+                messages_from_rec_channels.update_info(elem=rec_message)
 
-                    message_from_rec_channel.set_message_text(message.text)
-                    messages_from_rec_channels.add_elem(group_id=message.id,
-                                                        elem=message_from_rec_channel)
-                else:
-                    if message.grouped_id not in messages_from_rec_channels:
-                        messages_from_rec_channels.add_elem(group_id=message.grouped_id,
-                                                            elem=Message_from_rec_channel())
-                    rec_message = messages_from_rec_channels.get_elem(message.grouped_id)
-                    if message.media is not None:
-                        await message.download_media(f"./rec/{message.grouped_id}/")
-                        onlyfiles = [f for f in listdir(f"./rec/{message.grouped_id}/")]
-                        if check_text(text=message.text):
-                            if check_advertising(message.text.lower()):
-                                rec_message.media = await get_media(message_text=message.text,
-                                                                    onlyfiles=onlyfiles,
-                                                                    folder=f"rec/{message.grouped_id}",
-                                                                    media=rec_message.media)
-                                if rec_channel.last_id < message.id:
-                                    rec_channel.last_id = message.id
-                                    # rec_channels.update_info(elem=rec_channel)
-                            else:
-                                del messages_from_rec_channels[message.grouped_id]
-
-                await asyncio.sleep(3, result=None)
-
-        del_folders()
-
-        await asyncio.sleep(30, result=None)
+    await client.disconnect()
 
 
 if __name__ == "__main__":
+    for rec_channel in rec_channels.get_keys():
+        delete_all_channel_folders(channel_key=rec_channel,
+                                   messages_from_rec_channels=messages_from_rec_channels)
+    # manager = multiprocessing.Manager()
+    # messages_from_rec_channels = Message_from_rec_channels(manager)
     # get_new_message = Get_new_message()
     # get_new_message.start_process(func=get_new_message.start_schedule)
     # cleaner = Cleaner()
     # cleaner.start_process(func=cleaner.start_schedule)
-    
-    loop = asyncio.get_event_loop()
-    loop.create_task(main())
+    # recomedations_getter = GetterRecomendations()
+    # recomedations_getter.start_process(func=recomedations_getter.start_schedule)
     executor.start_polling(dp, skip_updates=False)

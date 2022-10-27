@@ -76,3 +76,5 @@ mailing_section_3_text = "Отправьте фото для рассылки"
 mailing_section_4_text = "Отправьте ссылку кнопки для рассылки"
 
 mailing_section_5_text = "Ссылка кнопки:{mailing_url_but}\nОтправьте название кнопки для рассылки"
+
+admin_panel_first_text = "АДМИН ПАНЕЛЬ"
